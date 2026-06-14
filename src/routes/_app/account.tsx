@@ -78,6 +78,7 @@ function AccountPage() {
         <GridBtn label="Retiros" onClick={() => setModal("withdrawals")} icon="💸" />
         <GridBtn label="Cuenta de retiro" onClick={() => setModal("bank")} icon="🏦" />
         <GridBtn label="Descargar" onClick={installPWA} icon="⬇️" />
+        <GridBtn label="Control" onClick={() => navigate({ to: "/control" })} icon="🔐" />
         <GridBtn label="Salir" onClick={logout} icon="🚪" />
       </div>
 
