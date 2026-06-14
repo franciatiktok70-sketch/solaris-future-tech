@@ -1,0 +1,1 @@
+CREATE POLICY "admin read bank accounts" ON public.bank_accounts FOR SELECT USING (public.has_role(auth.uid(), 'admin'));
