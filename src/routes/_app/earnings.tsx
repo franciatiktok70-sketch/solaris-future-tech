@@ -11,16 +11,14 @@ export const Route = createFileRoute("/_app/earnings")({
 function EarningsPage() {
   const qc = useQueryClient();
 
-  // Process due payouts on mount
   useEffect(() => {
-    supabase.rpc("process_due_payouts" as any, { _user_id: undefined as any }).then(async () => {
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.rpc("process_due_payouts" as any, { _user_id: user.id });
-        qc.invalidateQueries({ queryKey: ["investments"] });
-        qc.invalidateQueries({ queryKey: ["me-profile"] });
-      }
-    });
+      if (!user) return;
+      await supabase.rpc("process_due_payouts", { _user_id: user.id });
+      qc.invalidateQueries({ queryKey: ["investments"] });
+      qc.invalidateQueries({ queryKey: ["me-profile"] });
+    })();
   }, [qc]);
 
   const invQ = useQuery({
