@@ -41,6 +41,7 @@ function SharePage() {
 
   const code = meQ.data?.invitation_code ?? "";
   const link = typeof window !== "undefined" && code ? `${window.location.origin}/register?ref=${code}` : "";
+  const prettyLink = code ? `Apple${code}.lovable` : "";
 
   async function copy(text: string, label: string) {
     try {
