@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppShareRouteImport } from './routes/_app/share'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppEarningsRouteImport } from './routes/_app/earnings'
+import { Route as AppAccountRouteImport } from './routes/_app/account'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -31,6 +33,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -57,21 +64,30 @@ const AppEarningsRoute = AppEarningsRouteImport.update({
   path: '/earnings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/account': typeof AppAccountRoute
   '/earnings': typeof AppEarningsRoute
   '/home': typeof AppHomeRoute
   '/share': typeof AppShareRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/account': typeof AppAccountRoute
   '/earnings': typeof AppEarningsRoute
   '/home': typeof AppHomeRoute
   '/share': typeof AppShareRoute
@@ -80,9 +96,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/_app/account': typeof AppAccountRoute
   '/_app/earnings': typeof AppEarningsRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/share': typeof AppShareRoute
@@ -91,18 +109,22 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/login'
     | '/register'
     | '/welcome'
+    | '/account'
     | '/earnings'
     | '/home'
     | '/share'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/login'
     | '/register'
     | '/welcome'
+    | '/account'
     | '/earnings'
     | '/home'
     | '/share'
@@ -110,9 +132,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/admin'
     | '/login'
     | '/register'
     | '/welcome'
+    | '/_app/account'
     | '/_app/earnings'
     | '/_app/home'
     | '/_app/share'
@@ -121,6 +145,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -147,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -184,16 +216,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEarningsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/account': {
+      id: '/_app/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AppAccountRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
   AppEarningsRoute: typeof AppEarningsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppShareRoute: typeof AppShareRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
   AppEarningsRoute: AppEarningsRoute,
   AppHomeRoute: AppHomeRoute,
   AppShareRoute: AppShareRoute,
@@ -204,6 +245,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   WelcomeRoute: WelcomeRoute,
