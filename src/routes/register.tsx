@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +15,12 @@ function RegisterPage() {
   const [email, setEmail] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) setInvitationCode(ref.toUpperCase());
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

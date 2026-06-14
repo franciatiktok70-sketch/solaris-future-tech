@@ -41,6 +41,7 @@ function SharePage() {
 
   const code = meQ.data?.invitation_code ?? "";
   const link = typeof window !== "undefined" && code ? `${window.location.origin}/register?ref=${code}` : "";
+  const prettyLink = code ? `Apple${code}.lovable` : "";
 
   async function copy(text: string, label: string) {
     try {
@@ -81,9 +82,10 @@ function SharePage() {
         </div>
         <div className="pt-2 text-xs text-muted-foreground">Enlace de referido</div>
         <div className="flex items-center gap-2">
-          <div className="flex-1 truncate rounded-xl bg-secondary px-3 py-2.5 text-xs">{link}</div>
+          <div className="flex-1 truncate rounded-xl bg-secondary px-3 py-2.5 font-mono text-sm font-semibold">{prettyLink}</div>
           <button onClick={() => copy(link, "Enlace")} className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground">Copiar</button>
         </div>
+        <div className="pt-1 text-[10px] text-muted-foreground">Al copiar se enviará el enlace directo de registro de la plataforma.</div>
       </div>
 
       <div className="rounded-2xl bg-card p-4 shadow-sm">
