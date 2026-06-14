@@ -29,8 +29,26 @@ function AdminPage() {
   });
   const withdrawalsQ = useQuery({
     queryKey: ["admin-withdrawals"],
-    queryFn: async () => (await supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data: reqs } = await supabase
+        .from("withdrawal_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!reqs?.length) return [];
+      const userIds = Array.from(new Set(reqs.map((r) => r.user_id)));
+      const bankIds = Array.from(new Set(reqs.map((r) => r.bank_account_id).filter(Boolean) as string[]));
+      const [{ data: users }, { data: banks }] = await Promise.all([
+        supabase.from("profiles").select("id, username, email").in("id", userIds),
+        bankIds.length
+          ? supabase.from("bank_accounts").select("*").in("id", bankIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const uMap = new Map((users ?? []).map((u: any) => [u.id, u]));
+      const bMap = new Map((banks ?? []).map((b: any) => [b.id, b]));
+      return reqs.map((r) => ({ ...r, user: uMap.get(r.user_id), bank: bMap.get(r.bank_account_id) }));
+    },
   });
+  const [rejectTarget, setRejectTarget] = useState<any | null>(null);
   const usersQ = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => (await supabase.rpc("admin_list_users")).data ?? [],
