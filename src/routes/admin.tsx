@@ -29,8 +29,26 @@ function AdminPage() {
   });
   const withdrawalsQ = useQuery({
     queryKey: ["admin-withdrawals"],
-    queryFn: async () => (await supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data: reqs } = await supabase
+        .from("withdrawal_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!reqs?.length) return [];
+      const userIds = Array.from(new Set(reqs.map((r) => r.user_id)));
+      const bankIds = Array.from(new Set(reqs.map((r) => r.bank_account_id).filter(Boolean) as string[]));
+      const [{ data: users }, { data: banks }] = await Promise.all([
+        supabase.from("profiles").select("id, username, email").in("id", userIds),
+        bankIds.length
+          ? supabase.from("bank_accounts").select("*").in("id", bankIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const uMap = new Map((users ?? []).map((u: any) => [u.id, u]));
+      const bMap = new Map((banks ?? []).map((b: any) => [b.id, b]));
+      return reqs.map((r) => ({ ...r, user: uMap.get(r.user_id), bank: bMap.get(r.bank_account_id) }));
+    },
   });
+  const [rejectTarget, setRejectTarget] = useState<any | null>(null);
   const usersQ = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => (await supabase.rpc("admin_list_users")).data ?? [],
@@ -102,24 +120,84 @@ function AdminPage() {
       )}
 
       {tab === "withdrawals" && (
-        <div className="space-y-2">
-          {withdrawalsQ.data?.map((r) => (
-            <div key={r.id} className="rounded-2xl bg-card p-3 text-sm">
-              <div className="flex justify-between">
+        <div className="space-y-3">
+          {withdrawalsQ.data?.length === 0 && (
+            <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted-foreground">No hay solicitudes</div>
+          )}
+          {withdrawalsQ.data?.map((r: any) => (
+            <div key={r.id} className="rounded-2xl bg-card p-4 text-sm shadow-sm">
+              <div className="flex items-start justify-between border-b border-border/60 pb-3">
                 <div>
-                  <div className="font-medium">{bs(r.amount)}</div>
-                  <div className="text-[10px] text-muted-foreground">user: {r.user_id.slice(0, 8)}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Usuario</div>
+                  <div className="font-semibold">{r.user?.username ?? r.user_id.slice(0, 8)}</div>
+                  {r.user?.email && <div className="text-[10px] text-muted-foreground">{r.user.email}</div>}
                 </div>
-                <span className="h-fit rounded-full bg-secondary px-2 py-0.5 text-[10px]">{r.status}</span>
+                <div className="text-right">
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto</div>
+                  <div className="text-lg font-bold text-foreground">{bs(r.amount)}</div>
+                  <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${r.status === "pending" ? "bg-yellow-100 text-yellow-800" : r.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{r.status}</span>
+                </div>
               </div>
+
+              <div className="mt-3 rounded-xl bg-secondary/60 p-3">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Datos Bancarios del Usuario</div>
+                {r.bank ? (
+                  <dl className="grid grid-cols-3 gap-y-1.5 text-xs">
+                    <dt className="text-muted-foreground">Banco</dt>
+                    <dd className="col-span-2 font-medium">{r.bank.bank}</dd>
+                    <dt className="text-muted-foreground">Titular</dt>
+                    <dd className="col-span-2 font-medium">{r.bank.holder_name}</dd>
+                    <dt className="text-muted-foreground">Cédula / RIF</dt>
+                    <dd className="col-span-2 font-medium">{r.bank.cedula}</dd>
+                    <dt className="text-muted-foreground">Nº Cuenta</dt>
+                    <dd className="col-span-2 font-mono font-medium tracking-wide">{r.bank.account_number}</dd>
+                    <dt className="text-muted-foreground">Tipo</dt>
+                    <dd className="col-span-2 font-medium">{(r.bank as any).account_type ?? "Ahorros"}</dd>
+                  </dl>
+                ) : (
+                  <div className="text-xs text-destructive">El usuario no registró cuenta bancaria</div>
+                )}
+              </div>
+
               {r.status === "pending" && (
-                <div className="mt-2 flex gap-2">
-                  <button onClick={() => approveWithdrawal(r.id)} className="rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">Aprobar</button>
-                  <button onClick={() => rejectWithdrawal(r.id)} className="rounded-full bg-destructive px-3 py-1 text-xs text-destructive-foreground">Rechazar</button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => approveWithdrawal(r.id)}
+                    className="flex-1 rounded-full bg-green-600 py-2.5 text-xs font-semibold text-white shadow-sm transition active:scale-[0.98] hover:bg-green-700"
+                  >
+                    ✓ Aceptar
+                  </button>
+                  <button
+                    onClick={() => setRejectTarget(r)}
+                    className="flex-1 rounded-full bg-red-600 py-2.5 text-xs font-semibold text-white shadow-sm transition active:scale-[0.98] hover:bg-red-700"
+                  >
+                    ✕ Rechazar
+                  </button>
                 </div>
               )}
             </div>
           ))}
+
+          {rejectTarget && (
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setRejectTarget(null)}>
+              <div className="w-full max-w-sm rounded-3xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-base font-semibold">Rechazar solicitud</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Se devolverán <span className="font-semibold text-foreground">{bs(rejectTarget.amount)}</span> al balance de{" "}
+                  <span className="font-semibold text-foreground">{rejectTarget.user?.username ?? "usuario"}</span> y la transacción quedará marcada como rechazada.
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <button onClick={() => setRejectTarget(null)} className="flex-1 rounded-full bg-secondary py-2.5 text-xs font-medium">Cancelar</button>
+                  <button
+                    onClick={async () => { await rejectWithdrawal(rejectTarget.id); setRejectTarget(null); }}
+                    className="flex-1 rounded-full bg-red-600 py-2.5 text-xs font-semibold text-white hover:bg-red-700"
+                  >
+                    Confirmar Rechazo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
