@@ -13,7 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppShareRouteImport } from './routes/_app/share'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
@@ -40,7 +40,7 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
+const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -52,22 +52,22 @@ const IndexRoute = IndexRouteImport.update({
 const AppShareRoute = AppShareRouteImport.update({
   id: '/share',
   path: '/share',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEarningsRoute = AppEarningsRouteImport.update({
   id: '/earnings',
   path: '/earnings',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAccountRoute = AppAccountRouteImport.update({
   id: '/account',
   path: '/account',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -95,7 +95,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_app': typeof AppRouteWithChildren
+  '/_app': typeof AppRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -144,7 +144,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
@@ -185,7 +185,7 @@ declare module '@tanstack/react-router' {
       id: '/_app'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AppRouteImport
+      preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -200,51 +200,53 @@ declare module '@tanstack/react-router' {
       path: '/share'
       fullPath: '/share'
       preLoaderRoute: typeof AppShareRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/home': {
       id: '/_app/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AppHomeRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/earnings': {
       id: '/_app/earnings'
       path: '/earnings'
       fullPath: '/earnings'
       preLoaderRoute: typeof AppEarningsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/account': {
       id: '/_app/account'
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AppAccountRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppRouteRoute
     }
   }
 }
 
-interface AppRouteChildren {
+interface AppRouteRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppEarningsRoute: typeof AppEarningsRoute
   AppHomeRoute: typeof AppHomeRoute
   AppShareRoute: typeof AppShareRoute
 }
 
-const AppRouteChildren: AppRouteChildren = {
+const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppEarningsRoute: AppEarningsRoute,
   AppHomeRoute: AppHomeRoute,
   AppShareRoute: AppShareRoute,
 }
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
