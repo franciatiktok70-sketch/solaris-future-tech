@@ -82,6 +82,30 @@ function AccountPage() {
         <GridBtn label="Salir" onClick={logout} icon="🚪" />
       </div>
 
+      {/* Contact / Community */}
+      <div className="mx-5 mt-5 grid grid-cols-2 gap-3">
+        <a
+          href="https://t.me/+Fb5-AlgBookyMDEx"
+          target="_blank"
+          rel="noreferrer"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-4 text-center shadow-sm transition active:scale-95"
+        >
+          <span className="text-3xl">💬</span>
+          <span className="text-sm font-semibold leading-tight">Grupo de Telegram</span>
+          <span className="text-[10px] text-muted-foreground">Comunidad Oficial</span>
+        </a>
+        <a
+          href="https://t.me/AppleSupportGlobal001"
+          target="_blank"
+          rel="noreferrer"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-4 text-center shadow-sm transition active:scale-95"
+        >
+          <span className="text-3xl">🎧</span>
+          <span className="text-sm font-semibold leading-tight">Atención al Cliente</span>
+          <span className="text-[10px] text-muted-foreground">Soporte Técnico</span>
+        </a>
+      </div>
+
       {modal === "recharge" && <RechargeModal onClose={() => { setModal(null); qc.invalidateQueries(); }} />}
       {modal === "withdraw" && <WithdrawModal onClose={() => { setModal(null); qc.invalidateQueries(); }} />}
       {modal === "movements" && <ListModal title="Movimientos" type="movements" onClose={() => setModal(null)} />}
