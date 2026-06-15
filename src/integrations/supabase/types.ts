@@ -17,6 +17,7 @@ export type Database = {
       bank_accounts: {
         Row: {
           account_number: string | null
+          account_type: string
           bank: string
           cedula: string
           created_at: string
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           account_number?: string | null
+          account_type?: string
           bank: string
           cedula: string
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           account_number?: string | null
+          account_type?: string
           bank?: string
           cedula?: string
           created_at?: string
@@ -282,6 +285,7 @@ export type Database = {
           bank_account_id: string | null
           created_at: string
           id: string
+          net_amount: number | null
           processed_at: string | null
           status: string
           user_id: string
@@ -291,6 +295,7 @@ export type Database = {
           bank_account_id?: string | null
           created_at?: string
           id?: string
+          net_amount?: number | null
           processed_at?: string | null
           status?: string
           user_id: string
@@ -300,6 +305,7 @@ export type Database = {
           bank_account_id?: string | null
           created_at?: string
           id?: string
+          net_amount?: number | null
           processed_at?: string | null
           status?: string
           user_id?: string
@@ -319,6 +325,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_balance: {
+        Args: { _delta: number; _note: string; _user_id: string }
+        Returns: undefined
+      }
       admin_approve_recharge: { Args: { _req_id: string }; Returns: undefined }
       admin_approve_withdrawal: {
         Args: { _req_id: string }
@@ -340,6 +350,23 @@ export type Database = {
       }
       admin_reject_recharge: { Args: { _req_id: string }; Returns: undefined }
       admin_reject_withdrawal: { Args: { _req_id: string }; Returns: undefined }
+      admin_user_transactions: {
+        Args: { _user_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          kind: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_withdrawal: {
         Args: { _amount: number; _bank_account_id: string; _pin: string }
         Returns: string
