@@ -331,6 +331,40 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
             </div>
 
             <div className="mt-3 rounded-2xl bg-card p-4 text-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="font-semibold">Red de Referidos (Invitados)</div>
+                {(() => {
+                  const refs = allUsers.filter((u: any) => u.referred_by === selected.id);
+                  const total = refs.reduce((s: number, u: any) => s + Number(u.total_recharged ?? 0), 0);
+                  return (
+                    <div className="text-[10px] text-muted-foreground">
+                      {refs.length} directos · ↑{bs(total)}
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="max-h-72 space-y-1.5 overflow-y-auto">
+                {(() => {
+                  const refs = allUsers.filter((u: any) => u.referred_by === selected.id);
+                  if (!refs.length) return <div className="py-4 text-center text-xs text-muted-foreground">Este usuario aún no tiene referidos</div>;
+                  return refs.map((u: any) => (
+                    <div key={u.id} className="flex justify-between rounded-lg bg-secondary/50 px-3 py-2 text-xs">
+                      <div>
+                        <div className="font-medium">{u.username}</div>
+                        <div className="text-[10px] text-muted-foreground">{u.email}</div>
+                        <div className="text-[10px] text-muted-foreground">Código: {u.invitation_code} · {new Date(u.created_at).toLocaleDateString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold tabular-nums">{bs(u.balance)}</div>
+                        <div className="text-[10px] text-muted-foreground">↑{bs(u.total_recharged)}</div>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-2xl bg-card p-4 text-sm">
               <div className="mb-2 font-semibold">Historial de movimientos</div>
               <div className="max-h-72 space-y-1.5 overflow-y-auto">
                 {txQ.data?.length ? txQ.data.map((t: any) => (
