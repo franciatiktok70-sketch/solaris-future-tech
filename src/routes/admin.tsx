@@ -203,12 +203,12 @@ function AdminPage() {
         </div>
       )}
 
-      {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} />}
+      {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} allUsers={usersQ.data ?? []} />}
     </div>
   );
 }
 
-function UsersControlPanel({ users }: { users: any[] }) {
+function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<any | null>(null);
@@ -327,6 +327,40 @@ function UsersControlPanel({ users }: { users: any[] }) {
               <div className="flex gap-2">
                 <input value={newPwd} onChange={(e) => setNewPwd(e.target.value)} type="text" placeholder="Nueva contraseña" className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
                 <button disabled={busy} onClick={resetPassword} className="rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-50">Restablecer</button>
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-2xl bg-card p-4 text-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="font-semibold">Red de Referidos (Invitados)</div>
+                {(() => {
+                  const refs = allUsers.filter((u: any) => u.referred_by === selected.id);
+                  const total = refs.reduce((s: number, u: any) => s + Number(u.total_recharged ?? 0), 0);
+                  return (
+                    <div className="text-[10px] text-muted-foreground">
+                      {refs.length} directos · ↑{bs(total)}
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="max-h-72 space-y-1.5 overflow-y-auto">
+                {(() => {
+                  const refs = allUsers.filter((u: any) => u.referred_by === selected.id);
+                  if (!refs.length) return <div className="py-4 text-center text-xs text-muted-foreground">Este usuario aún no tiene referidos</div>;
+                  return refs.map((u: any) => (
+                    <div key={u.id} className="flex justify-between rounded-lg bg-secondary/50 px-3 py-2 text-xs">
+                      <div>
+                        <div className="font-medium">{u.username}</div>
+                        <div className="text-[10px] text-muted-foreground">{u.email}</div>
+                        <div className="text-[10px] text-muted-foreground">Código: {u.invitation_code} · {new Date(u.created_at).toLocaleDateString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold tabular-nums">{bs(u.balance)}</div>
+                        <div className="text-[10px] text-muted-foreground">↑{bs(u.total_recharged)}</div>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
