@@ -203,7 +203,7 @@ function AdminPage() {
         </div>
       )}
 
-      {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} />}
+      {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} allUsers={usersQ.data ?? []} />}
     </div>
   );
 }
