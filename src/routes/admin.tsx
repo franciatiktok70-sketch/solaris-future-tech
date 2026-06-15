@@ -133,8 +133,10 @@ function AdminPage() {
                   {r.user?.email && <div className="text-[10px] text-muted-foreground">{r.user.email}</div>}
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Solicitado</div>
                   <div className="text-lg font-bold text-foreground">{bs(r.amount)}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">Neto a transferir</div>
+                  <div className="text-sm font-semibold text-green-700">{bs(r.net_amount ?? r.amount * 0.85)}</div>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${r.status === "pending" ? "bg-yellow-100 text-yellow-800" : r.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{r.status}</span>
                 </div>
               </div>
@@ -145,14 +147,14 @@ function AdminPage() {
                   <dl className="grid grid-cols-3 gap-y-1.5 text-xs">
                     <dt className="text-muted-foreground">Banco</dt>
                     <dd className="col-span-2 font-medium">{r.bank.bank}</dd>
+                    <dt className="text-muted-foreground">Tipo</dt>
+                    <dd className="col-span-2 font-medium">{r.bank.account_type ?? "Ahorros"}</dd>
                     <dt className="text-muted-foreground">Titular</dt>
                     <dd className="col-span-2 font-medium">{r.bank.holder_name}</dd>
                     <dt className="text-muted-foreground">Cédula / RIF</dt>
                     <dd className="col-span-2 font-medium">{r.bank.cedula}</dd>
                     <dt className="text-muted-foreground">Nº Cuenta</dt>
                     <dd className="col-span-2 font-mono font-medium tracking-wide">{r.bank.account_number}</dd>
-                    <dt className="text-muted-foreground">Tipo</dt>
-                    <dd className="col-span-2 font-medium">{(r.bank as any).account_type ?? "Ahorros"}</dd>
                   </dl>
                 ) : (
                   <div className="text-xs text-destructive">El usuario no registró cuenta bancaria</div>
