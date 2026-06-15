@@ -208,7 +208,7 @@ function AdminPage() {
   );
 }
 
-function UsersControlPanel({ users }: { users: any[] }) {
+function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<any | null>(null);
