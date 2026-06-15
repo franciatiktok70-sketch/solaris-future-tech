@@ -275,6 +275,7 @@ function BankModal({ onClose }: { onClose: () => void }) {
   const [holder, setHolder] = useState("");
   const [cedula, setCedula] = useState("");
   const [account, setAccount] = useState("");
+  const [accountType, setAccountType] = useState("Ahorros");
   const qc = useQueryClient();
   const banksQ = useQuery({
     queryKey: ["my-banks-list"],
@@ -289,16 +290,16 @@ function BankModal({ onClose }: { onClose: () => void }) {
     if (!bank || !holder || !cedula) return toast.error("Completa los campos");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { error } = await supabase.from("bank_accounts").insert({ user_id: user.id, bank, holder_name: holder, cedula, account_number: account });
+    const { error } = await supabase.from("bank_accounts").insert({ user_id: user.id, bank, holder_name: holder, cedula, account_number: account, account_type: accountType } as any);
     if (error) toast.error(error.message);
     else { toast.success("Cuenta agregada"); setBank(""); setHolder(""); setCedula(""); setAccount(""); qc.invalidateQueries({ queryKey: ["my-banks-list"] }); qc.invalidateQueries({ queryKey: ["my-banks"] }); }
   }
   return (
     <ModalShell title="Cuentas de retiro" onClose={onClose}>
       <div className="mb-4 space-y-2">
-        {banksQ.data?.map((b) => (
+        {banksQ.data?.map((b: any) => (
           <div key={b.id} className="rounded-2xl bg-card p-3 text-sm">
-            <div className="font-medium">{b.bank}</div>
+            <div className="font-medium">{b.bank} · <span className="text-xs text-muted-foreground">{b.account_type ?? "Ahorros"}</span></div>
             <div className="text-xs text-muted-foreground">{b.holder_name} · {b.cedula}</div>
             {b.account_number && <div className="text-xs text-muted-foreground">{b.account_number}</div>}
           </div>
@@ -310,9 +311,13 @@ function BankModal({ onClose }: { onClose: () => void }) {
           <option value="">Banco…</option>
           {VENEZUELA_BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
-        <input value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="Nombre completo" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
-        <input value={cedula} onChange={(e) => setCedula(e.target.value)} placeholder="Cédula" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
-        <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Número de cuenta (opcional)" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+        <select value={accountType} onChange={(e) => setAccountType(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm">
+          <option value="Ahorros">Cuenta de Ahorros</option>
+          <option value="Corriente">Cuenta Corriente</option>
+        </select>
+        <input value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="Nombre completo del titular" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+        <input value={cedula} onChange={(e) => setCedula(e.target.value)} placeholder="Cédula / RIF" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+        <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Número de cuenta" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
         <button onClick={save} className="w-full rounded-full bg-primary py-2.5 text-sm font-medium text-primary-foreground">Guardar</button>
       </div>
     </ModalShell>
