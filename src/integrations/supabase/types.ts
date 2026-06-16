@@ -65,6 +65,71 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_code_claims: {
+        Row: {
+          amount: number
+          code_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          code_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          code_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_code_claims_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "gift_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_codes: {
+        Row: {
+          active: boolean
+          amount: number
+          claim_limit: number
+          claims_count: number
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          claim_limit: number
+          claims_count?: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          claim_limit?: number
+          claims_count?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           active: boolean
@@ -325,6 +390,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activate_investment: {
+        Args: { _inv_id: string }
+        Returns: undefined
+      }
       admin_adjust_balance: {
         Args: { _delta: number; _note: string; _user_id: string }
         Returns: undefined
@@ -333,6 +402,31 @@ export type Database = {
       admin_approve_withdrawal: {
         Args: { _req_id: string }
         Returns: undefined
+      }
+      admin_create_gift_code: {
+        Args: { _amount: number; _claim_limit: number; _code: string }
+        Returns: string
+      }
+      admin_force_expire_investment: {
+        Args: { _inv_id: string }
+        Returns: undefined
+      }
+      admin_list_investments: {
+        Args: never
+        Returns: {
+          active: boolean
+          cycle_days: number
+          days_remaining: number
+          email: string
+          id: string
+          payouts_made: number
+          plan_id: string
+          plan_name: string
+          plan_price: number
+          purchased_at: string
+          user_id: string
+          username: string
+        }[]
       }
       admin_list_users: {
         Args: never
@@ -350,6 +444,14 @@ export type Database = {
       }
       admin_reject_recharge: { Args: { _req_id: string }; Returns: undefined }
       admin_reject_withdrawal: { Args: { _req_id: string }; Returns: undefined }
+      admin_toggle_gift_code: {
+        Args: { _active: boolean; _code_id: string }
+        Returns: undefined
+      }
+      admin_update_gift_code_limit: {
+        Args: { _code_id: string; _new_limit: number }
+        Returns: undefined
+      }
       admin_user_transactions: {
         Args: { _user_id: string }
         Returns: {
@@ -367,6 +469,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_gift_code: { Args: { _code: string }; Returns: number }
       create_withdrawal: {
         Args: { _amount: number; _bank_account_id: string; _pin: string }
         Returns: string
