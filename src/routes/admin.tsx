@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users">("recharges");
+  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users" | "devices" | "codes">("recharges");
 
   useEffect(() => {
     (async () => {
