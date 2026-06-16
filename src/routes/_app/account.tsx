@@ -219,7 +219,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
   });
   const [bankId, setBankId] = useState("");
 
-  const MIN = 1000;
+  const MIN = 600;
   const FEE = 0.15;
   const amt = parseFloat(amount) || 0;
   const net = amt > 0 ? amt - amt * FEE : 0;
@@ -251,7 +251,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
       ) : step === 1 ? (
         <div className="space-y-3">
           <label className="block">
-            <span className="mb-1 block text-xs text-muted-foreground">Monto (Bs) · mínimo 1.000</span>
+            <span className="mb-1 block text-xs text-muted-foreground">Monto (Bs) · mínimo 600</span>
             <input
               value={amount}
               onChange={(e) => { setAmount(e.target.value); setError(null); }}
@@ -266,7 +266,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
             )}
             {(belowMin || error) && (
               <p className="mt-1.5 text-xs font-semibold text-red-600">
-                {error ?? "El monto mínimo de retiro es de 1000 Bs."}
+                {error ?? "El monto mínimo de retiro es de 600 Bs."}
               </p>
             )}
           </label>
