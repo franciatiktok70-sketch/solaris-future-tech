@@ -152,20 +152,20 @@ function RechargeModal({ onClose }: { onClose: () => void }) {
   const [amount, setAmount] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const MIN_DEPOSIT = 2500;
+  const amt = parseFloat(amount) || 0;
+  const belowMin = amt > 0 && amt < MIN_DEPOSIT;
   async function submit() {
-    const amt = parseFloat(amount);
     if (!amt || amt <= 0) return toast.error("Monto inválido");
+    if (amt < MIN_DEPOSIT) return toast.error("Si envía un monto inferior a 2.500 Bs, su inversión no podrá ser procesada");
+    if (!file) return toast.error("Debe seleccionar la imagen del comprobante de pago para procesar la transferencia");
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
-    let receiptUrl: string | null = null;
-    if (file) {
-      const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from("receipts").upload(path, file);
-      if (upErr) { toast.error(upErr.message); setLoading(false); return; }
-      receiptUrl = path;
-    }
-    const { error } = await supabase.from("recharge_requests").insert({ user_id: user.id, amount: amt, receipt_url: receiptUrl });
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("receipts").upload(path, file);
+    if (upErr) { toast.error(upErr.message); setLoading(false); return; }
+    const { error } = await supabase.from("recharge_requests").insert({ user_id: user.id, amount: amt, receipt_url: path });
     setLoading(false);
     if (error) toast.error(error.message);
     else { toast.success("Solicitud enviada"); onClose(); }
@@ -175,20 +175,25 @@ function RechargeModal({ onClose }: { onClose: () => void }) {
       <div className="space-y-3 rounded-2xl bg-card p-4 text-sm">
         <div className="font-medium">Datos para transferir</div>
         <div className="space-y-1 text-xs text-muted-foreground">
-          <div>Titular: <strong className="text-foreground">Orlanda Ramírez Acosta</strong></div>
-          <div>Banco: <strong className="text-foreground">Banco Venezolano de Crédito</strong></div>
-          <div>Cuenta: <strong className="text-foreground">0104-0019-86-0190162931</strong></div>
+          <div>Banco: <strong className="text-foreground">Venezolano de Crédito</strong></div>
+          <div>Cuenta: <strong className="text-foreground font-mono">01040019860190162931</strong></div>
+          <div>Nombre: <strong className="text-foreground">Orlando Ramírez Acosta</strong></div>
           <div>Cédula: <strong className="text-foreground">8.634.091</strong></div>
         </div>
       </div>
+      <div className="mt-3 rounded-2xl border border-amber-400/60 bg-amber-50 p-3 text-xs text-amber-900">
+        ⚠️ <strong>Monto mínimo 2.500 Bs.</strong> Si envía un monto inferior a 2.500 Bs, su inversión no podrá ser procesada.
+      </div>
       <div className="mt-3 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs text-muted-foreground">Monto (Bs)</span>
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full rounded-2xl border border-border bg-card px-4 py-3 outline-none focus:border-primary" />
+          <span className="mb-1 block text-xs text-muted-foreground">Monto (Bs) · mínimo 2.500</span>
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={MIN_DEPOSIT} className={`w-full rounded-2xl border bg-card px-4 py-3 outline-none ${belowMin ? "border-red-500" : "border-border focus:border-primary"}`} />
+          {belowMin && <p className="mt-1.5 text-xs font-semibold text-red-600">El monto mínimo es 2.500 Bs.</p>}
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-muted-foreground">Captura del comprobante</span>
+          <span className="mb-1 block text-xs text-muted-foreground">Captura del comprobante <span className="text-red-600">*</span></span>
           <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm" />
+          {!file && <p className="mt-1 text-[10px] text-red-600">Obligatorio para procesar la transferencia</p>}
         </label>
         <button disabled={loading} onClick={submit} className="w-full rounded-full bg-primary py-3 font-medium text-primary-foreground disabled:opacity-50">{loading ? "Enviando…" : "Enviar solicitud"}</button>
       </div>
