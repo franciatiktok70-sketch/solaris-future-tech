@@ -87,10 +87,10 @@ function AdminPage() {
         </div>
       </header>
 
-      <div className="mb-4 flex gap-2">
-        {(["recharges", "withdrawals", "users"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-full py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
-            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : "Usuarios"}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {(["recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
+            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
           </button>
         ))}
       </div>
