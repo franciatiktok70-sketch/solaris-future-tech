@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users">("recharges");
+  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users" | "devices" | "codes">("recharges");
 
   useEffect(() => {
     (async () => {
@@ -87,10 +87,10 @@ function AdminPage() {
         </div>
       </header>
 
-      <div className="mb-4 flex gap-2">
-        {(["recharges", "withdrawals", "users"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-full py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
-            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : "Usuarios"}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {(["recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
+            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
           </button>
         ))}
       </div>
@@ -204,6 +204,8 @@ function AdminPage() {
       )}
 
       {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} allUsers={usersQ.data ?? []} />}
+      {tab === "devices" && <DevicesPanel />}
+      {tab === "codes" && <GiftCodesPanel />}
     </div>
   );
 }
@@ -382,6 +384,126 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function DevicesPanel() {
+  const qc = useQueryClient();
+  const invQ = useQuery({
+    queryKey: ["admin-investments"],
+    queryFn: async () => (await supabase.rpc("admin_list_investments")).data ?? [],
+  });
+  async function forceExpire(id: string) {
+    if (!confirm("¿Forzar expiración de este plan?")) return;
+    const { error } = await supabase.rpc("admin_force_expire_investment", { _inv_id: id });
+    if (error) toast.error(error.message); else { toast.success("Plan expirado"); qc.invalidateQueries({ queryKey: ["admin-investments"] }); }
+  }
+  async function activate(id: string) {
+    if (!confirm("¿Activar manualmente este dispositivo (reinicia ciclo de 30 días)?")) return;
+    const { error } = await supabase.rpc("admin_activate_investment", { _inv_id: id });
+    if (error) toast.error(error.message); else { toast.success("Plan activado"); qc.invalidateQueries({ queryKey: ["admin-investments"] }); }
+  }
+  return (
+    <div className="space-y-2">
+      <div className="text-xs text-muted-foreground">Dispositivos arrendados por los usuarios. Ciclo: 30 días · ROI: 7% diario.</div>
+      {invQ.data?.length === 0 && <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted-foreground">Sin dispositivos arrendados</div>}
+      {invQ.data?.map((i: any) => (
+        <div key={i.id} className="rounded-2xl bg-card p-3 text-sm shadow-sm">
+          <div className="flex justify-between">
+            <div>
+              <div className="font-semibold">{i.plan_name}</div>
+              <div className="text-[10px] text-muted-foreground">{i.username} · {i.email}</div>
+              <div className="text-[10px] text-muted-foreground">ID: {i.user_id.slice(0,8)}</div>
+              <div className="text-[10px] text-muted-foreground">Compra: {new Date(i.purchased_at).toLocaleDateString()}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase text-muted-foreground">Días restantes</div>
+              <div className={`text-lg font-bold ${i.active && i.days_remaining > 0 ? "text-green-700" : "text-red-600"}`}>{i.days_remaining}</div>
+              <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${i.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{i.active ? "Activo" : "Expirado"}</span>
+            </div>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {i.active ? (
+              <button onClick={() => forceExpire(i.id)} className="flex-1 rounded-full bg-red-600 py-2 text-xs font-semibold text-white">Forzar expiración</button>
+            ) : (
+              <button onClick={() => activate(i.id)} className="flex-1 rounded-full bg-green-600 py-2 text-xs font-semibold text-white">Activar manualmente</button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GiftCodesPanel() {
+  const qc = useQueryClient();
+  const [code, setCode] = useState("");
+  const [amount, setAmount] = useState("");
+  const [limit, setLimit] = useState("");
+  const [busy, setBusy] = useState(false);
+  const codesQ = useQuery({
+    queryKey: ["gift-codes"],
+    queryFn: async () => (await supabase.from("gift_codes").select("*").order("created_at", { ascending: false })).data ?? [],
+  });
+  async function create() {
+    const a = parseFloat(amount); const l = parseInt(limit);
+    if (!a || a <= 0) return toast.error("Monto inválido");
+    if (!l || l <= 0) return toast.error("Límite inválido");
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_create_gift_code", { _code: code, _amount: a, _claim_limit: l });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Código creado"); setCode(""); setAmount(""); setLimit(""); qc.invalidateQueries({ queryKey: ["gift-codes"] }); }
+  }
+  async function editLimit(id: string, current: number) {
+    const v = prompt("Nuevo límite de usos:", String(current));
+    if (!v) return;
+    const n = parseInt(v);
+    if (!n || n <= 0) return toast.error("Límite inválido");
+    const { error } = await supabase.rpc("admin_update_gift_code_limit", { _code_id: id, _new_limit: n });
+    if (error) toast.error(error.message); else { toast.success("Límite actualizado"); qc.invalidateQueries({ queryKey: ["gift-codes"] }); }
+  }
+  async function toggle(id: string, active: boolean) {
+    const { error } = await supabase.rpc("admin_toggle_gift_code", { _code_id: id, _active: !active });
+    if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["gift-codes"] });
+  }
+  return (
+    <div className="space-y-3">
+      <div className="rounded-2xl bg-card p-4 text-sm">
+        <div className="mb-2 font-semibold">Generar nuevo código</div>
+        <div className="space-y-2">
+          <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Código (opcional, se autogenera)" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-mono uppercase" />
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" placeholder="Monto en Bs (p.ej. 20)" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+          <input value={limit} onChange={(e) => setLimit(e.target.value)} type="number" placeholder="Límite de usuarios (p.ej. 5)" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+          <button disabled={busy} onClick={create} className="w-full rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50">Generar código</button>
+        </div>
+      </div>
+
+      <div className="text-xs font-semibold text-muted-foreground">Códigos existentes</div>
+      {codesQ.data?.length === 0 && <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted-foreground">Aún no hay códigos</div>}
+      {codesQ.data?.map((c: any) => {
+        const reached = c.claims_count >= c.claim_limit;
+        return (
+          <div key={c.id} className="rounded-2xl bg-card p-3 text-sm shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-mono text-base font-bold tracking-wider">{c.code}</div>
+                <div className="text-[10px] text-muted-foreground">{bs(c.amount)} · creado {new Date(c.created_at).toLocaleDateString()}</div>
+                <div className="mt-1 text-xs">Usos: <strong>{c.claims_count}</strong> / {c.claim_limit}</div>
+                {reached && <div className="mt-1 text-[10px] font-semibold text-red-600">Este código ha alcanzado el límite máximo de usos</div>}
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] ${c.active && !reached ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                {c.active && !reached ? "Activo" : "Inactivo"}
+              </span>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => editLimit(c.id, c.claim_limit)} className="flex-1 rounded-full bg-secondary py-1.5 text-xs">Editar límite</button>
+              <button onClick={() => toggle(c.id, c.active)} className="flex-1 rounded-full bg-foreground py-1.5 text-xs text-background">{c.active ? "Desactivar" : "Reactivar"}</button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
