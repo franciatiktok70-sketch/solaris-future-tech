@@ -53,6 +53,8 @@ function HomePage() {
     else toast.success(`${name} arrendado correctamente`);
   }
 
+  const [giftOpen, setGiftOpen] = useState(false);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -75,6 +77,23 @@ function HomePage() {
             />
           ))}
         </div>
+      </div>
+
+      {/* Redeem code */}
+      <div className="mx-5">
+        <button
+          onClick={() => setGiftOpen(true)}
+          className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-primary/80 px-4 py-3 text-primary-foreground shadow-sm active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎁</span>
+            <div className="text-left">
+              <div className="text-sm font-semibold">Canjear código</div>
+              <div className="text-[11px] opacity-80">Ingresa tu código promocional</div>
+            </div>
+          </div>
+          <span className="text-lg">›</span>
+        </button>
       </div>
 
       {/* Community fund */}
@@ -132,6 +151,57 @@ function HomePage() {
           })}
         </div>
       </div>
+
+      {giftOpen && <GiftCodeModal onClose={() => setGiftOpen(false)} />}
     </div>
   );
 }
+
+function GiftCodeModal({ onClose }: { onClose: () => void }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  async function submit() {
+    const c = code.trim();
+    if (!c) return toast.error("Introduce un código");
+    setLoading(true);
+    const { data, error } = await supabase.rpc("claim_gift_code", { _code: c });
+    setLoading(false);
+    if (error) {
+      const m = error.message || "";
+      if (/inválido/i.test(m)) toast.error("Código inválido");
+      else if (/ya canjeaste/i.test(m)) toast.error("El código ya ha sido canjeado por usted");
+      else if (/límite/i.test(m)) toast.error("Este código ha alcanzado el límite máximo de usos");
+      else if (/desactivado/i.test(m)) toast.error("Este código ha alcanzado el límite máximo de usos");
+      else toast.error(m);
+      return;
+    }
+    toast.success(`¡Has recibido ${bs(Number(data))}!`);
+    onClose();
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-black/50 sm:items-center sm:justify-center" onClick={onClose}>
+      <div className="w-full rounded-t-3xl bg-background p-5 pb-8 sm:max-w-sm sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Canjear código</h2>
+          <button onClick={onClose} className="text-sm text-primary">Cerrar</button>
+        </div>
+        <div className="space-y-3">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="Ingresa tu código"
+            className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-center text-lg font-semibold tracking-widest uppercase outline-none focus:border-primary"
+          />
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="w-full rounded-full bg-primary py-3 font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {loading ? "Procesando…" : "Aceptar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

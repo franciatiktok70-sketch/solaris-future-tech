@@ -244,29 +244,38 @@ export type Database = {
       }
       recharge_requests: {
         Row: {
-          amount: number
+          amount: number | null
+          cedula: string | null
           created_at: string
+          holder_name: string | null
           id: string
           processed_at: string | null
           receipt_url: string | null
+          reference: string | null
           status: string
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: number | null
+          cedula?: string | null
           created_at?: string
+          holder_name?: string | null
           id?: string
           processed_at?: string | null
           receipt_url?: string | null
+          reference?: string | null
           status?: string
           user_id: string
         }
         Update: {
-          amount?: number
+          amount?: number | null
+          cedula?: string | null
           created_at?: string
+          holder_name?: string | null
           id?: string
           processed_at?: string | null
           receipt_url?: string | null
+          reference?: string | null
           status?: string
           user_id?: string
         }

@@ -149,27 +149,35 @@ function ModalShell({ title, onClose, children }: { title: string; onClose: () =
 }
 
 function RechargeModal({ onClose }: { onClose: () => void }) {
-  const [amount, setAmount] = useState("");
+  const [cedula, setCedula] = useState("");
+  const [holder, setHolder] = useState("");
+  const [reference, setReference] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const MIN_DEPOSIT = 2500;
-  const amt = parseFloat(amount) || 0;
-  const belowMin = amt > 0 && amt < MIN_DEPOSIT;
+
   async function submit() {
-    if (!amt || amt <= 0) return toast.error("Monto inválido");
-    if (amt < MIN_DEPOSIT) return toast.error("Si envía un monto inferior a 2.500 Bs, su inversión no podrá ser procesada");
-    if (!file) return toast.error("Debe seleccionar la imagen del comprobante de pago para procesar la transferencia");
+    if (!cedula.trim()) return toast.error("La cédula es obligatoria");
+    if (!holder.trim()) return toast.error("El nombre del titular es obligatorio");
+    if (!reference.trim()) return toast.error("La referencia es obligatoria");
+    if (!file) return toast.error("Debe subir la imagen del comprobante");
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     const path = `${user.id}/${Date.now()}-${file.name}`;
     const { error: upErr } = await supabase.storage.from("receipts").upload(path, file);
     if (upErr) { toast.error(upErr.message); setLoading(false); return; }
-    const { error } = await supabase.from("recharge_requests").insert({ user_id: user.id, amount: amt, receipt_url: path });
+    const { error } = await supabase.from("recharge_requests").insert({
+      user_id: user.id,
+      receipt_url: path,
+      cedula: cedula.trim(),
+      holder_name: holder.trim(),
+      reference: reference.trim(),
+    } as any);
     setLoading(false);
     if (error) toast.error(error.message);
-    else { toast.success("Solicitud enviada"); onClose(); }
+    else { toast.success("Solicitud enviada. El administrador validará tu recarga."); onClose(); }
   }
+
   return (
     <ModalShell title="Recargar" onClose={onClose}>
       <div className="space-y-3 rounded-2xl bg-card p-4 text-sm">
@@ -181,17 +189,21 @@ function RechargeModal({ onClose }: { onClose: () => void }) {
           <div>Cédula: <strong className="text-foreground">8.634.091</strong></div>
         </div>
       </div>
-      <div className="mt-3 rounded-2xl border border-amber-400/60 bg-amber-50 p-3 text-xs text-amber-900">
-        ⚠️ <strong>Monto mínimo 2.500 Bs.</strong> Si envía un monto inferior a 2.500 Bs, su inversión no podrá ser procesada.
-      </div>
       <div className="mt-3 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs text-muted-foreground">Monto (Bs) · mínimo 2.500</span>
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={MIN_DEPOSIT} className={`w-full rounded-2xl border bg-card px-4 py-3 outline-none ${belowMin ? "border-red-500" : "border-border focus:border-primary"}`} />
-          {belowMin && <p className="mt-1.5 text-xs font-semibold text-red-600">El monto mínimo es 2.500 Bs.</p>}
+          <span className="mb-1 block text-xs text-muted-foreground">Cédula <span className="text-red-600">*</span></span>
+          <input value={cedula} onChange={(e) => setCedula(e.target.value)} inputMode="numeric" className="w-full rounded-2xl border border-border bg-card px-4 py-3 outline-none focus:border-primary" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-muted-foreground">Captura del comprobante <span className="text-red-600">*</span></span>
+          <span className="mb-1 block text-xs text-muted-foreground">Nombre del titular del banco <span className="text-red-600">*</span></span>
+          <input value={holder} onChange={(e) => setHolder(e.target.value)} className="w-full rounded-2xl border border-border bg-card px-4 py-3 outline-none focus:border-primary" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs text-muted-foreground">Referencia <span className="text-red-600">*</span></span>
+          <input value={reference} onChange={(e) => setReference(e.target.value)} inputMode="numeric" className="w-full rounded-2xl border border-border bg-card px-4 py-3 outline-none focus:border-primary" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs text-muted-foreground">Subir imagen del comprobante <span className="text-red-600">*</span></span>
           <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm" />
           {!file && <p className="mt-1 text-[10px] text-red-600">Obligatorio para procesar la transferencia</p>}
         </label>
@@ -200,6 +212,7 @@ function RechargeModal({ onClose }: { onClose: () => void }) {
     </ModalShell>
   );
 }
+
 
 function WithdrawModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<1 | 2>(1);
