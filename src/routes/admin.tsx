@@ -204,6 +204,8 @@ function AdminPage() {
       )}
 
       {tab === "users" && <UsersControlPanel users={usersQ.data ?? []} allUsers={usersQ.data ?? []} />}
+      {tab === "devices" && <DevicesPanel />}
+      {tab === "codes" && <GiftCodesPanel />}
     </div>
   );
 }
