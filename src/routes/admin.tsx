@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users" | "devices" | "codes">("recharges");
+  const [tab, setTab] = useState<"pending" | "recharges" | "withdrawals" | "users" | "devices" | "codes">("pending");
 
   useEffect(() => {
     (async () => {
@@ -79,7 +79,7 @@ function AdminPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-background p-4">
-      <header className="flex items-center justify-between pb-4">
+      <header className="flex items-center justify-between pb-3">
         <h1 className="text-xl font-semibold">Panel Administrador</h1>
         <div className="flex gap-2">
           <a href="https://t.me/anonymousHD5" target="_blank" rel="noreferrer" className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">Telegram</a>
@@ -87,13 +87,30 @@ function AdminPage() {
         </div>
       </header>
 
+      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-primary/70 px-4 py-3 text-primary-foreground shadow-sm">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider opacity-80">Usuarios Reales</div>
+          <div className="text-[10px] opacity-70">Total de cuentas registradas en la plataforma</div>
+        </div>
+        <div className="text-3xl font-bold tabular-nums">{usersQ.data?.length ?? "—"}</div>
+      </div>
+
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {(["recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
+        {(["pending", "recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
-            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
+            {t === "pending" ? "Solicitudes en Espera" : t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
           </button>
         ))}
       </div>
+
+      {tab === "pending" && (
+        <PendingRechargesPanel
+          requests={(rechargesQ.data ?? []).filter((r: any) => r.status === "pending")}
+          onApprove={approveRecharge}
+          onReject={rejectRecharge}
+        />
+      )}
+
 
       {tab === "recharges" && (
         <div className="space-y-2">
