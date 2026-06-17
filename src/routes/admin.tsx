@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"recharges" | "withdrawals" | "users" | "devices" | "codes">("recharges");
+  const [tab, setTab] = useState<"pending" | "recharges" | "withdrawals" | "users" | "devices" | "codes">("pending");
 
   useEffect(() => {
     (async () => {
@@ -79,7 +79,7 @@ function AdminPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-background p-4">
-      <header className="flex items-center justify-between pb-4">
+      <header className="flex items-center justify-between pb-3">
         <h1 className="text-xl font-semibold">Panel Administrador</h1>
         <div className="flex gap-2">
           <a href="https://t.me/anonymousHD5" target="_blank" rel="noreferrer" className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">Telegram</a>
@@ -87,13 +87,30 @@ function AdminPage() {
         </div>
       </header>
 
+      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-primary/70 px-4 py-3 text-primary-foreground shadow-sm">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider opacity-80">Usuarios Reales</div>
+          <div className="text-[10px] opacity-70">Total de cuentas registradas en la plataforma</div>
+        </div>
+        <div className="text-3xl font-bold tabular-nums">{usersQ.data?.length ?? "—"}</div>
+      </div>
+
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {(["recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
+        {(["pending", "recharges", "withdrawals", "users", "devices", "codes"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}>
-            {t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
+            {t === "pending" ? "Solicitudes en Espera" : t === "recharges" ? "Recargas" : t === "withdrawals" ? "Retiros" : t === "users" ? "Usuarios" : t === "devices" ? "Dispositivos" : "Códigos"}
           </button>
         ))}
       </div>
+
+      {tab === "pending" && (
+        <PendingRechargesPanel
+          requests={(rechargesQ.data ?? []).filter((r: any) => r.status === "pending")}
+          onApprove={approveRecharge}
+          onReject={rejectRecharge}
+        />
+      )}
+
 
       {tab === "recharges" && (
         <div className="space-y-2">
@@ -505,5 +522,71 @@ function GiftCodesPanel() {
         );
       })}
     </div>
+  );
+}
+
+function PendingRechargesPanel({ requests, onApprove, onReject }: { requests: any[]; onApprove: (id: string) => void; onReject: (id: string) => void }) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  if (!requests.length) {
+    return <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted-foreground">No hay solicitudes en espera</div>;
+  }
+  return (
+    <div className="space-y-3">
+      {requests.map((r) => (
+        <div key={r.id} className="rounded-2xl bg-card p-4 text-sm shadow-sm">
+          <div className="flex items-start justify-between border-b border-border/60 pb-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Solicitud</div>
+              <div className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
+              <div className="text-[10px] text-muted-foreground">User: {r.user_id.slice(0, 8)}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto (Bs)</div>
+              <div className="text-lg font-bold text-foreground">{bs(r.amount ?? 0)}</div>
+              <span className="mt-1 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] text-yellow-800">Pendiente</span>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-3">
+            <ReceiptThumb path={r.receipt_url} onOpen={setLightbox} />
+            <dl className="flex-1 grid grid-cols-3 gap-y-1.5 text-xs">
+              <dt className="text-muted-foreground">Cédula</dt>
+              <dd className="col-span-2 font-medium">{r.cedula ?? "—"}</dd>
+              <dt className="text-muted-foreground">Titular</dt>
+              <dd className="col-span-2 font-medium">{r.holder_name ?? "—"}</dd>
+              <dt className="text-muted-foreground">Referencia</dt>
+              <dd className="col-span-2 font-mono font-medium">{r.reference ?? "—"}</dd>
+            </dl>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button onClick={() => onApprove(r.id)} className="flex-1 rounded-full bg-green-600 py-2.5 text-xs font-semibold text-white hover:bg-green-700">✓ Aceptar</button>
+            <button onClick={() => onReject(r.id)} className="flex-1 rounded-full bg-red-600 py-2.5 text-xs font-semibold text-white hover:bg-red-700">✕ Rechazar</button>
+          </div>
+        </div>
+      ))}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="Comprobante" className="max-h-[90vh] max-w-full rounded-2xl" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReceiptThumb({ path, onOpen }: { path: string | null; onOpen: (url: string) => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    if (!path) return;
+    supabase.storage.from("receipts").createSignedUrl(path, 600).then(({ data }) => {
+      if (active && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { active = false; };
+  }, [path]);
+  if (!path) return <div className="grid h-24 w-24 shrink-0 place-items-center rounded-xl bg-secondary text-[10px] text-muted-foreground">Sin imagen</div>;
+  if (!url) return <div className="h-24 w-24 shrink-0 animate-pulse rounded-xl bg-secondary" />;
+  return (
+    <button onClick={() => onOpen(url)} className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-secondary active:scale-95">
+      <img src={url} alt="Comprobante" className="h-full w-full object-cover" />
+    </button>
   );
 }
