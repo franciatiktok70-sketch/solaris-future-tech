@@ -2,11 +2,20 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { MaintenanceGate } from "@/components/MaintenanceGate";
 
 export const Route = createFileRoute("/register")({
-  component: RegisterPage,
+  component: RegisterRoute,
   head: () => ({ meta: [{ title: "Registro - Apple Platform" }] }),
 });
+
+function RegisterRoute() {
+  return (
+    <MaintenanceGate>
+      <RegisterPage />
+    </MaintenanceGate>
+  );
+}
 
 function RegisterPage() {
   const navigate = useNavigate();
