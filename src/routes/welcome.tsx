@@ -15,41 +15,41 @@ function WelcomePage() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/50 sm:items-center sm:justify-center">
-      <div className="w-full rounded-t-3xl bg-card p-6 pb-8 sm:max-w-md sm:rounded-3xl">
-        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-foreground text-3xl text-background"></div>
-        <h2 className="text-center text-2xl font-semibold tracking-tight">Bienvenido a la plataforma de Apple</h2>
-        <p className="mt-3 text-center text-base font-medium text-primary">Ganancias diarias del 7%</p>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/60 sm:items-center sm:justify-center">
+      <div className="w-full glass-card rounded-t-3xl p-6 pb-8 sm:max-w-md sm:rounded-3xl">
+        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl glass-card animate-neon-pulse">
+          <span className="text-3xl">☀️</span>
+        </div>
+        <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
+          Bienvenido a Solaris Future Tech
+        </h2>
+        <p className="mt-3 text-center text-base font-semibold text-neon">Ganancias diarias del 5%</p>
 
         <div className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
           <p>
-            Esta plataforma fue fundada el <strong className="text-foreground">20 de mayo de 2026</strong> como un
-            entorno tecnológico de simulación avanzada que integra el arrendamiento de dispositivos digitales con un
-            motor de generación de rendimientos comerciales en tiempo real. Nuestro modelo de economía colaborativa
-            permite a usuarios de todo el país participar de forma activa en la optimización de fondos de liquidez
-            digital, eliminando intermediarios tradicionales y automatizando la distribución de beneficios de manera
-            equitativa.
+            <span className="text-cyan-glow">Solaris Future Tech</span> es una plataforma de nueva generación
+            enfocada en energía solar y economía descentralizada. Invierte en <strong className="text-foreground">
+            paneles solares tokenizados</strong> y participa en la producción global de energía limpia mientras
+            recibes rendimientos automáticos en dólares.
           </p>
           <p>
-            Nuestro ecosistema combina inteligencia distribuida, validación algorítmica de transacciones y un robusto
-            programa de referidos de cinco niveles, ofreciendo a cada inversionista un canal transparente, ágil y
-            completamente auditable para expandir de forma segura su capital. Los fondos acumulados operan bajo
-            estrictas normativas de control comercial, garantizando flujos estables para todos los miembros activos.
+            Cada panel adquirido produce un rendimiento fijo del <strong className="text-neon">5% diario</strong> durante
+            un ciclo optimizado de <strong className="text-foreground">30 días</strong>, acreditado
+            automáticamente a tu balance cada 24 horas. Los fondos operan bajo estrictas normativas de
+            control comercial y validación algorítmica.
           </p>
           <p>
-            Cada equipo tecnológico arrendado produce un rendimiento fijo del <strong className="text-foreground">7%
-            diario</strong> durante un ciclo optimizado de <strong className="text-foreground">30 días</strong>,
-            acreditado automáticamente al saldo disponible de tu cuenta cada 24 horas. Al finalizar este periodo, el
-            ciclo se cierra de manera exitosa, permitiendo una rotación ágil y segura del capital invertido con un
-            retiro mínimo accesible de tan solo 600 Bs.
+            Nuestro programa de referidos de <strong className="text-foreground">5 niveles</strong> (10% · 5% · 3% ·
+            2% · 1%) te permite construir una red rentable y expandir tu capital de forma segura. Retiro
+            mínimo de <strong className="text-cyan-glow">$5.00 USD</strong> con una comisión fija de solo $1.00 USD.
           </p>
         </div>
 
         <button
           onClick={() => navigate({ to: "/home" })}
-          className="mt-7 w-full rounded-full bg-primary py-3.5 text-base font-medium text-primary-foreground active:scale-[0.98]"
+          className="mt-7 w-full rounded-full bg-primary py-3.5 text-base font-semibold text-primary-foreground glow-cyan active:scale-[0.98]"
         >
-          Entrar
+          Entrar a la plataforma
         </button>
       </div>
     </div>
