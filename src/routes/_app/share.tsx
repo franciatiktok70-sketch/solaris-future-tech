@@ -8,11 +8,11 @@ export const Route = createFileRoute("/_app/share")({
 });
 
 const LEVELS = [
-  { lvl: "Nivel 1", pct: "15%" },
-  { lvl: "Nivel 2", pct: "8%" },
-  { lvl: "Nivel 3", pct: "6%" },
-  { lvl: "Nivel 4", pct: "4%" },
-  { lvl: "Nivel 5", pct: "2%" },
+  { lvl: "Nivel 1", pct: "10%" },
+  { lvl: "Nivel 2", pct: "5%" },
+  { lvl: "Nivel 3", pct: "3%" },
+  { lvl: "Nivel 4", pct: "2%" },
+  { lvl: "Nivel 5", pct: "1%" },
 ];
 
 function SharePage() {
@@ -41,7 +41,7 @@ function SharePage() {
 
   const code = meQ.data?.invitation_code ?? "";
   const link = typeof window !== "undefined" && code ? `${window.location.origin}/register?ref=${code}` : "";
-  const prettyLink = code ? `Apple${code}.lovable` : "";
+  const prettyLink = code ? `Solaris${code}.link` : "";
 
   async function copy(text: string, label: string) {
     try {
@@ -55,43 +55,43 @@ function SharePage() {
   return (
     <div className="space-y-4 px-5 pt-4">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Compartir</h1>
-        <p className="text-sm text-muted-foreground">Invita y gana comisiones en 5 niveles</p>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Compartir & Ganar</h1>
+        <p className="text-xs uppercase tracking-[0.25em] text-cyan-glow">Programa de referidos · 5 niveles</p>
       </header>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
-        <div className="mb-2 text-sm font-semibold">Programa de referidos</div>
+      <div className="glass-card rounded-2xl p-4">
+        <div className="mb-2 text-sm font-semibold">Comisiones por nivel</div>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Comparte tu enlace y gana comisiones automáticas cada vez que un miembro de tu red recargue saldo en la plataforma.
+          Cada vez que un miembro de tu red recargue saldo, recibes comisiones automáticas en tu balance.
         </p>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {LEVELS.map((l) => (
-            <div key={l.lvl} className="rounded-xl bg-secondary p-2 text-center">
+            <div key={l.lvl} className="glass-card rounded-xl p-2 text-center">
               <div className="text-[10px] text-muted-foreground">{l.lvl}</div>
-              <div className="text-sm font-bold text-primary">{l.pct}</div>
+              <div className="text-sm font-bold text-neon">{l.pct}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2 rounded-2xl bg-card p-4 shadow-sm">
+      <div className="glass-card space-y-2 rounded-2xl p-4">
         <div className="text-xs text-muted-foreground">Código de invitación</div>
         <div className="flex items-center gap-2">
-          <div className="flex-1 truncate rounded-xl bg-secondary px-3 py-2.5 font-mono text-base font-semibold">{code || "—"}</div>
-          <button onClick={() => copy(code, "Código")} className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground">Copiar</button>
+          <div className="flex-1 truncate rounded-xl bg-black/30 px-3 py-2.5 font-mono text-base font-semibold text-cyan-glow">{code || "—"}</div>
+          <button onClick={() => copy(code, "Código")} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Copiar</button>
         </div>
         <div className="pt-2 text-xs text-muted-foreground">Enlace de referido</div>
         <div className="flex items-center gap-2">
-          <div className="flex-1 truncate rounded-xl bg-secondary px-3 py-2.5 font-mono text-sm font-semibold">{prettyLink}</div>
-          <button onClick={() => copy(link, "Enlace")} className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground">Copiar</button>
+          <div className="flex-1 truncate rounded-xl bg-black/30 px-3 py-2.5 font-mono text-sm font-semibold">{prettyLink}</div>
+          <button onClick={() => copy(link, "Enlace")} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Copiar</button>
         </div>
-        <div className="pt-1 text-[10px] text-muted-foreground">Al copiar se enviará el enlace directo de registro de la plataforma.</div>
+        <div className="pt-1 text-[10px] text-muted-foreground">Al copiar se enviará el enlace directo de registro.</div>
       </div>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <div className="glass-card rounded-2xl p-4">
         <div className="mb-3 text-sm font-semibold">Mis referidos directos ({refsQ.data?.length ?? 0})</div>
         {refsQ.data && refsQ.data.length > 0 ? (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-white/5">
             {refsQ.data.map((r, i) => (
               <li key={i} className="flex items-center justify-between py-2.5">
                 <div className="min-w-0">
