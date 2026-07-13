@@ -80,7 +80,7 @@ function AdminPage() {
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-background p-4">
       <header className="flex items-center justify-between pb-3">
-        <h1 className="text-xl font-semibold">Panel Administrador</h1>
+        <h1 className="text-xl font-semibold">Panel Solaris Admin</h1>
         <div className="flex gap-2">
           <a href="https://t.me/anonymousHD5" target="_blank" rel="noreferrer" className="rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground">Telegram</a>
           <button onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/login" }); }} className="rounded-full bg-foreground px-3 py-1.5 text-xs text-background">Salir</button>
@@ -153,7 +153,7 @@ function AdminPage() {
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Solicitado</div>
                   <div className="text-lg font-bold text-foreground">{usd(r.amount)}</div>
                   <div className="mt-0.5 text-[10px] text-muted-foreground">Neto a transferir</div>
-                  <div className="text-sm font-semibold text-green-700">{usd(r.net_amount ?? r.amount * 0.85)}</div>
+                  <div className="text-sm font-semibold text-green-700">{usd(r.net_amount ?? (r.amount - 1))}</div>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${r.status === "pending" ? "bg-yellow-100 text-yellow-800" : r.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{r.status}</span>
                 </div>
               </div>
@@ -423,7 +423,7 @@ function DevicesPanel() {
   }
   return (
     <div className="space-y-2">
-      <div className="text-xs text-muted-foreground">Dispositivos arrendados por los usuarios. Ciclo: 30 días · ROI: 7% diario.</div>
+      <div className="text-xs text-muted-foreground">Dispositivos arrendados por los usuarios. Ciclo: 30 días · ROI: 5% diario.</div>
       {invQ.data?.length === 0 && <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted-foreground">Sin dispositivos arrendados</div>}
       {invQ.data?.map((i: any) => (
         <div key={i.id} className="rounded-2xl bg-card p-3 text-sm shadow-sm">
@@ -541,7 +541,7 @@ function PendingRechargesPanel({ requests, onApprove, onReject }: { requests: an
               <div className="text-[10px] text-muted-foreground">User: {r.user_id.slice(0, 8)}</div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto (Bs)</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto (USD)</div>
               <div className="text-lg font-bold text-foreground">{usd(r.amount ?? 0)}</div>
               <span className="mt-1 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] text-yellow-800">Pendiente</span>
             </div>
