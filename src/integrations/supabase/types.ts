@@ -172,29 +172,35 @@ export type Database = {
         Row: {
           cycle_days: number
           daily_profit_pct: number
+          hidden: boolean
           id: string
           image_url: string | null
           name: string
           price: number
           sort_order: number
+          wattage: number | null
         }
         Insert: {
           cycle_days?: number
           daily_profit_pct?: number
+          hidden?: boolean
           id?: string
           image_url?: string | null
           name: string
           price: number
           sort_order?: number
+          wattage?: number | null
         }
         Update: {
           cycle_days?: number
           daily_profit_pct?: number
+          hidden?: boolean
           id?: string
           image_url?: string | null
           name?: string
           price?: number
           sort_order?: number
+          wattage?: number | null
         }
         Relationships: []
       }
