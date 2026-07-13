@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { bs } from "@/lib/format";
+import { usd, bs, bsFromUsd, USD_TO_BS } from "@/lib/format";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -118,7 +118,7 @@ function AdminPage() {
             <div key={r.id} className="rounded-2xl bg-card p-3 text-sm">
               <div className="flex justify-between">
                 <div>
-                  <div className="font-medium">{bs(r.amount)}</div>
+                  <div className="font-medium">{usd(r.amount)}</div>
                   <div className="text-[10px] text-muted-foreground">user: {r.user_id.slice(0, 8)}</div>
                   <div className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
                 </div>
@@ -151,9 +151,9 @@ function AdminPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Solicitado</div>
-                  <div className="text-lg font-bold text-foreground">{bs(r.amount)}</div>
+                  <div className="text-lg font-bold text-foreground">{usd(r.amount)}</div>
                   <div className="mt-0.5 text-[10px] text-muted-foreground">Neto a transferir</div>
-                  <div className="text-sm font-semibold text-green-700">{bs(r.net_amount ?? r.amount * 0.85)}</div>
+                  <div className="text-sm font-semibold text-green-700">{usd(r.net_amount ?? r.amount * 0.85)}</div>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${r.status === "pending" ? "bg-yellow-100 text-yellow-800" : r.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{r.status}</span>
                 </div>
               </div>
@@ -202,7 +202,7 @@ function AdminPage() {
               <div className="w-full max-w-sm rounded-3xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-base font-semibold">Rechazar solicitud</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Se devolverán <span className="font-semibold text-foreground">{bs(rejectTarget.amount)}</span> al balance de{" "}
+                  Se devolverán <span className="font-semibold text-foreground">{usd(rejectTarget.amount)}</span> al balance de{" "}
                   <span className="font-semibold text-foreground">{rejectTarget.user?.username ?? "usuario"}</span> y la transacción quedará marcada como rechazada.
                 </p>
                 <div className="mt-4 flex gap-2">
@@ -295,9 +295,9 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
                 <div className="text-[10px] text-muted-foreground">Código: {u.invitation_code}</div>
               </div>
               <div className="text-right">
-                <div className="font-semibold">{bs(u.balance)}</div>
-                <div className="text-[10px] text-muted-foreground">↑{bs(u.total_recharged)}</div>
-                <div className="text-[10px] text-muted-foreground">↓{bs(u.total_withdrawn)}</div>
+                <div className="font-semibold">{usd(u.balance)}</div>
+                <div className="text-[10px] text-muted-foreground">↑{usd(u.total_recharged)}</div>
+                <div className="text-[10px] text-muted-foreground">↓{usd(u.total_withdrawn)}</div>
               </div>
             </div>
           </button>
@@ -324,8 +324,8 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] uppercase text-muted-foreground">Saldo actual</div>
-                  <div className="text-2xl font-bold tabular-nums">{bs(selected.balance)}</div>
-                  <div className="text-[10px] text-muted-foreground">↑{bs(selected.total_recharged)} · ↓{bs(selected.total_withdrawn)}</div>
+                  <div className="text-2xl font-bold tabular-nums">{usd(selected.balance)}</div>
+                  <div className="text-[10px] text-muted-foreground">↑{usd(selected.total_recharged)} · ↓{usd(selected.total_withdrawn)}</div>
                 </div>
               </div>
             </div>
@@ -357,7 +357,7 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
                   const total = refs.reduce((s: number, u: any) => s + Number(u.total_recharged ?? 0), 0);
                   return (
                     <div className="text-[10px] text-muted-foreground">
-                      {refs.length} directos · ↑{bs(total)}
+                      {refs.length} directos · ↑{usd(total)}
                     </div>
                   );
                 })()}
@@ -374,8 +374,8 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
                         <div className="text-[10px] text-muted-foreground">Código: {u.invitation_code} · {new Date(u.created_at).toLocaleDateString()}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold tabular-nums">{bs(u.balance)}</div>
-                        <div className="text-[10px] text-muted-foreground">↑{bs(u.total_recharged)}</div>
+                        <div className="font-semibold tabular-nums">{usd(u.balance)}</div>
+                        <div className="text-[10px] text-muted-foreground">↑{usd(u.total_recharged)}</div>
                       </div>
                     </div>
                   ));
@@ -393,7 +393,7 @@ function UsersControlPanel({ users, allUsers }: { users: any[]; allUsers: any[] 
                       <div className="text-[10px] text-muted-foreground">{t.description}</div>
                       <div className="text-[10px] text-muted-foreground">{new Date(t.created_at).toLocaleString()}</div>
                     </div>
-                    <div className={`font-semibold tabular-nums ${Number(t.amount) >= 0 ? "text-green-700" : "text-red-600"}`}>{bs(t.amount)}</div>
+                    <div className={`font-semibold tabular-nums ${Number(t.amount) >= 0 ? "text-green-700" : "text-red-600"}`}>{usd(t.amount)}</div>
                   </div>
                 )) : <div className="py-4 text-center text-xs text-muted-foreground">Sin movimientos</div>}
               </div>
@@ -506,7 +506,7 @@ function GiftCodesPanel() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="font-mono text-base font-bold tracking-wider">{c.code}</div>
-                <div className="text-[10px] text-muted-foreground">{bs(c.amount)} · creado {new Date(c.created_at).toLocaleDateString()}</div>
+                <div className="text-[10px] text-muted-foreground">{usd(c.amount)} · creado {new Date(c.created_at).toLocaleDateString()}</div>
                 <div className="mt-1 text-xs">Usos: <strong>{c.claims_count}</strong> / {c.claim_limit}</div>
                 {reached && <div className="mt-1 text-[10px] font-semibold text-red-600">Este código ha alcanzado el límite máximo de usos</div>}
               </div>
@@ -542,7 +542,7 @@ function PendingRechargesPanel({ requests, onApprove, onReject }: { requests: an
             </div>
             <div className="text-right">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Monto (Bs)</div>
-              <div className="text-lg font-bold text-foreground">{bs(r.amount ?? 0)}</div>
+              <div className="text-lg font-bold text-foreground">{usd(r.amount ?? 0)}</div>
               <span className="mt-1 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] text-yellow-800">Pendiente</span>
             </div>
           </div>
