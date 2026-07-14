@@ -12,29 +12,36 @@ import appCss from "../styles.css?url";
 import solarisLogo from "@/assets/solaris-logo.png.asset.json";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: () => {
+    const logoUrl = `https://solaris-future-tech.lovable.app${solarisLogo.url}`;
+    return {
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { title: "Solaris Future Tech — Energía solar y ganancias diarias" },
-      { name: "description", content: "Solaris Future Tech: invierte en tecnología solar de nueva generación y recibe ganancias diarias del 5% con un programa de referidos de 5 niveles." },
+      { name: "description", content: "Solaris Future Tech: invierte en paneles solares de nueva generación y recibe ganancias diarias del 5% en USD. Seguridad de nivel bancario, retiros rápidos." },
       { name: "theme-color", content: "#0a1024" },
       { property: "og:title", content: "Solaris Future Tech" },
       { name: "twitter:title", content: "Solaris Future Tech" },
-      { property: "og:description", content: "Inversión en paneles solares con ganancias diarias del 5%. Retiros en USD o Bs." },
-      { name: "twitter:description", content: "Inversión en paneles solares con ganancias diarias del 5%." },
+      { property: "og:description", content: "Invierte en paneles solares — 5% de ganancia diaria en USD. Seguridad máxima." },
+      { name: "twitter:description", content: "Invierte en paneles solares — 5% de ganancia diaria en USD." },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: logoUrl },
+      { name: "twitter:image", content: logoUrl },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      { rel: "icon", type: "image/png", href: solarisLogo.url },
+      { rel: "shortcut icon", type: "image/png", href: solarisLogo.url },
+      { rel: "apple-touch-icon", href: solarisLogo.url },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" },
     ],
-  }),
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: () => (
