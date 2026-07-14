@@ -52,6 +52,7 @@ function AdminPage() {
   const usersQ = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => (await supabase.rpc("admin_list_users")).data ?? [],
+    refetchInterval: 15000,
   });
 
   async function approveRecharge(id: string) {
@@ -87,12 +88,15 @@ function AdminPage() {
         </div>
       </header>
 
-      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-primary/70 px-4 py-3 text-primary-foreground shadow-sm">
+      <div className="mb-4 flex items-center justify-between rounded-2xl glass-card px-4 py-4 glow-cyan">
         <div>
-          <div className="text-[10px] uppercase tracking-wider opacity-80">Usuarios Reales</div>
-          <div className="text-[10px] opacity-70">Total de cuentas registradas en la plataforma</div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-cyan-glow">Usuarios en vivo</div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">Contador en tiempo real · actualiza cada 15s</div>
         </div>
-        <div className="text-3xl font-bold tabular-nums">{usersQ.data?.length ?? "—"}</div>
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[oklch(0.85_0.22_145)] shadow-[0_0_8px_oklch(0.85_0.22_145)]" />
+          <div className="font-display text-4xl font-bold tabular-nums text-foreground">{usersQ.data?.length ?? "—"}</div>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
