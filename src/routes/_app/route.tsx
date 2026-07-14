@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
+import { useAutoLogout } from "@/hooks/use-auto-logout";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -9,6 +11,10 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const navigate = useNavigate();
+  useAutoLogout(() => {
+    toast.info("Sesión cerrada por inactividad (30 min)");
+    navigate({ to: "/login" });
+  });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

@@ -1,13 +1,20 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-const MAINTENANCE_PASSWORD = "33550892Jesus";
-const STORAGE_KEY = "maintenance_unlocked";
+// SHA-256("202122") — la contraseña nunca vive en texto plano en el bundle.
+const MAINTENANCE_HASH = "14c4efe863be0c3fb9964c4cd6ce0b51c0dc347e59e80b6d2aaa33cbf72c76b5";
+const STORAGE_KEY = "maintenance_unlocked_v2";
+
+async function sha256(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export function MaintenanceGate({ children }: { children: ReactNode }) {
   const [unlocked, setUnlocked] = useState(false);
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem(STORAGE_KEY) === "1") {
@@ -26,9 +33,12 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
 
   if (unlocked) return <>{children}</>;
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password === MAINTENANCE_PASSWORD) {
+    setChecking(true);
+    const hash = await sha256(password);
+    setChecking(false);
+    if (hash === MAINTENANCE_HASH) {
       sessionStorage.setItem(STORAGE_KEY, "1");
       setUnlocked(true);
     } else {
@@ -65,9 +75,10 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
         {error && <p className="text-center text-xs text-red-400">{error}</p>}
         <button
           type="submit"
-          className="w-full rounded-full bg-primary py-3 text-base font-semibold text-primary-foreground active:scale-[0.98] glow-cyan"
+          disabled={checking}
+          className="w-full rounded-full bg-primary py-3 text-base font-semibold text-primary-foreground active:scale-[0.98] glow-cyan disabled:opacity-50"
         >
-          Ingresar
+          {checking ? "Verificando…" : "Ingresar"}
         </button>
       </form>
     </div>
