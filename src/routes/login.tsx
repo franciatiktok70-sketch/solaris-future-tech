@@ -14,12 +14,14 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSending, setResetSending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    // Admin master shortcut: J35U5HD / 33550892Jesus
     let effectiveEmail = email.trim();
     const effectivePassword = password;
     if (effectiveEmail.toUpperCase() === "J35U5HD" && password === "33550892Jesus") {
@@ -49,6 +51,19 @@ function LoginPage() {
       }
     }
     navigate({ to: "/welcome" });
+  }
+
+  async function sendReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetEmail.trim()) return toast.error("Ingresa tu correo");
+    setResetSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetSending(false);
+    if (error) return toast.error(error.message);
+    toast.success("Correo enviado. Revisa tu bandeja.");
+    setShowReset(false);
   }
 
   return (
@@ -89,6 +104,39 @@ function LoginPage() {
           >
             {loading ? "Ingresando…" : "Entrar"}
           </button>
+
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => setShowReset((v) => !v)}
+              className="text-sm font-semibold text-red-400 hover:text-red-300"
+            >
+              Olvidé contraseña
+            </button>
+          </div>
+
+          {showReset && (
+            <div className="mt-3 space-y-3 rounded-2xl glass-card p-4">
+              <p className="text-xs text-muted-foreground">
+                Ingresa tu correo registrado. Te enviaremos un enlace seguro para restablecer tu contraseña.
+              </p>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full rounded-2xl glass-input px-4 py-3 text-base outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={resetSending}
+                className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground glow-cyan disabled:opacity-50"
+              >
+                {resetSending ? "Enviando…" : "Enviar correo electrónico"}
+              </button>
+            </div>
+          )}
 
           <p className="pt-4 text-center text-sm text-muted-foreground">
             ¿No tienes cuenta?{" "}
