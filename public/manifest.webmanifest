@@ -6,7 +6,7 @@
   "background_color": "#0a1024",
   "theme_color": "#3af5ba",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/__l5e/assets-v1/878f2f4a-8a50-45d9-b846-a20269272ffc/solaris-logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/__l5e/assets-v1/878f2f4a-8a50-45d9-b846-a20269272ffc/solaris-logo.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
