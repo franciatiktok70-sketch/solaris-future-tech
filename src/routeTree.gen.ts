@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ControlRouteImport } from './routes/control'
@@ -24,6 +25,11 @@ import { Route as AppAccountRouteImport } from './routes/_app/account'
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/account': typeof AppAccountRoute
   '/earnings': typeof AppEarningsRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/account': typeof AppAccountRoute
   '/earnings': typeof AppEarningsRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/earnings': typeof AppEarningsRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
     | '/control'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/welcome'
     | '/account'
     | '/earnings'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/control'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/welcome'
     | '/account'
     | '/earnings'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/control'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/welcome'
     | '/_app/account'
     | '/_app/earnings'
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   ControlRoute: typeof ControlRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
 }
 
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   ControlRoute: ControlRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
