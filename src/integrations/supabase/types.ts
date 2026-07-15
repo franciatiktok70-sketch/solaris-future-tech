@@ -207,6 +207,7 @@ export type Database = {
       profiles: {
         Row: {
           balance: number
+          bonus_locked: boolean
           created_at: string
           email: string
           id: string
@@ -218,6 +219,7 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          bonus_locked?: boolean
           created_at?: string
           email: string
           id: string
@@ -229,6 +231,7 @@ export type Database = {
         }
         Update: {
           balance?: number
+          bonus_locked?: boolean
           created_at?: string
           email?: string
           id?: string
@@ -284,6 +287,30 @@ export type Database = {
           reference?: string | null
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      signup_ips: {
+        Row: {
+          created_at: string
+          id: string
+          ip: unknown
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip: unknown
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: unknown
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
