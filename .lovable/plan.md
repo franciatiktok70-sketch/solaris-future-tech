@@ -1,54 +1,53 @@
+# Fase 2 — Registro, verificación y bono de bienvenida
 
-# Rediseño total: Solaris Future Tech
+Empezamos por el bloque de registro/onboarding, que es la base de todo lo demás (sin registro robusto, no tiene sentido tocar recargas/retiros).
 
-Debido al alcance (rebranding + 10 planes nuevos + moneda USD + verificación email + retiros multi-paso + tickets + historial + anti-multicuenta + glassmorphism), lo entrego en **4 iteraciones consecutivas**. Cada iteración deja la app funcional.
+## Qué se construye
 
-## Iteración 1 — Rebranding, moneda USD, planes solares, glassmorphism
-- Marca: "Solaris Future Tech" en todos los textos (welcome, login, register, headers, título HTML, manifest).
-- Paleta nueva en `src/styles.css`: fondo azul espacial `oklch(0.18 0.04 260)`, superficie glass translúcida, acentos verde neón `oklch(0.85 0.22 145)` y cian `oklch(0.82 0.18 220)`. Tokens `--glass-bg`, `--glass-border`, `--glow-neon`. Utilidad `.glass-card` con `backdrop-filter`.
-- Tipografía futurista (Space Grotesk display + Inter body) cargada vía `<link>` en `__root.tsx`.
-- Migración DB: reemplazo de los `plans` actuales por los 10 paneles solares en USD (precio en USD, `daily_profit_pct` = 5, `cycle_days` = configurable). Añado columna `price_usd` o reutilizo `price` como USD.
-- Tasa fija `USD_TO_BS = 750` en `src/lib/format.ts`; helper `formatUsd()` y `formatBsFromUsd()`.
-- Todas las vistas (`home`, `earnings`, `account`, `share`, `admin`) muestran USD como principal y "≈ X Bs" como referencia.
-- Reglas nuevas: retiro mínimo $5, fee fijo $1, bono registro $1 (crédito automático en `handle_new_user`).
-- Botón "Comprar Tecnología" en cada tarjeta con estilo glass + glow.
+1. **Verificación por código de 6 dígitos por email**
+   - Cambio de `signUp` (magic link) a `signInWithOtp({ email, options: { shouldCreateUser: true, data: {...} } })`.
+   - Pantalla nueva `/verify` con 6 inputs, reenvío con cooldown de 60s, validación con `verifyOtp({ type: 'email' })`.
+   - Los metadatos (`username`, `phone`, `invitation_code`) se pasan en `options.data` y el trigger `handle_new_user` los usa como ya lo hace.
 
-## Iteración 2 — Registro con verificación, bono, indicador de contraseña, referidos
-- Activo confirmación de email nativa de Supabase (`auto_confirm_email: false`).
-- Formulario de registro añade **teléfono** (nueva columna `phone` en `profiles`).
-- Indicador visual de fortaleza de contraseña (barra Rojo→Amarillo→Verde) exigiendo 8+ chars, mayúscula, número.
-- Botón "Enviar código de verificación" que dispara `signInWithOtp`/reenvío de confirmación con cooldown 60s.
-- Banner emergente al login: "¡Bono de Registro Activo! $1.00 USD" (una sola vez por usuario, marcado en `profiles.bonus_claimed`).
-- Pestaña informativa "Programa de Referidos" con los 5 niveles (10/5/3/2/1%) y actualización de `admin_approve_recharge` para usar esos porcentajes.
-- Anti-multicuenta: nueva tabla `signup_fingerprints` (ip + user-agent hash) revisada en un server fn de pre-signup; si coincide, bloquea con mensaje "Solo se permite una cuenta por dispositivo/red".
+2. **Selector de código país con banderas + búsqueda**
+   - Componente `CountryCodeSelect` con lista embebida (ISO, nombre, código, emoji bandera) y buscador.
+   - Se integra en `/register` reemplazando el input `+58 …` actual. El número final se guarda como `+<code><number>`.
+   - Sin dependencias nuevas pesadas (lista JSON local, ~250 países).
 
-## Iteración 3 — Centro de recargas dual + retiros multi-paso con confirmación
-- **Recargas** con dos pestañas:
-  - USDT BEP20: dirección `0x2c70345879534404d45371ab46eecd6eb28b55c0`, botón copiar, form (wallet origen + TXID + monto USD).
-  - Bolívares: datos Banco Venezolano de Crédito (Orlanda Ramírez, cuenta, cédula) + botones copiar + form actual (monto Bs, referencia, comprobante, botón WhatsApp).
-  - Nuevas columnas en `recharge_requests`: `method` ('usdt'|'bs'), `wallet_from`, `tx_hash`, `amount_usd`.
-- **Retiros**:
-  - Gestión de destinos: extiendo `bank_accounts` con `kind` ('bs'|'usdt'), `network`, `wallet_address`. UI "Guardar dirección de retiro".
-  - Flujo: seleccionar destino → monto USD (mín $5, fee $1) → botón "Enviar código al correo" (cooldown 60s, código 6 dígitos guardado hasheado en `withdrawal_pins`, enviado vía `resend`/link OTP) → ingresar código → modal de doble confirmación mostrando destino → "Enviar solicitud".
-  - `create_withdrawal` actualizado a USD, fee $1, deducción inmediata, estado "pending".
+3. **Bono $5 + auto-compra del Plan Debut $5 al registrarse**
+   - Migración: insertar plan `Debut` ($5, 5%/día, 30 días) si no existe.
+   - Modificar `handle_new_user` para:
+     - Acreditar $5.00 (en vez de $1.00) como `bonus` con descripción "Bono de bienvenida Solaris".
+     - Crear automáticamente una `investments` fila del Plan Debut para el nuevo usuario (sin descontar saldo, ya que es cortesía).
+     - Marcar en `profiles` un flag `bonus_locked boolean default true` que se usará en la Fase 3 para bloquear retiros hasta que el usuario invierta con su propio dinero.
+   - Ajustar `transactions.description` de "Bono de registro" existente.
 
-## Iteración 4 — Historial, tickets, sesión, trust badges, admin
-- **Historial Financiero**: pestaña con sub-tabs "Recargas" / "Retiros"; cada fila con ID corto, fecha, método, monto USD/Bs, badge de color (Pendiente amarillo, Aprobado verde neón, Rechazado rojo).
-- **Soporte con tickets**: tabla `support_tickets` (categoría, mensaje, número `SFT-XXXXX`, estado). UI para abrir ticket + botón "Hablar en WhatsApp con #SFT-XXXXX".
-- **Auto-logout**: hook global de inactividad (30 min sin eventos → `signOut` + redirect).
-- **Botón "Cerrar Sesión de forma segura"** visible en cuenta.
-- **Trust badges** en footer: chips glass cian "SSL Secured", "256-bit Encryption", "Secure with BEP20".
-- **Admin**: pestaña "Retiros Pendientes" con aprobar/rechazar (rechazo devuelve saldo — ya existe la lógica, solo faltan detalles visuales), pestaña "Tickets".
+4. **Restricción 1 cuenta por IP**
+   - Nueva tabla `signup_ips (user_id, ip inet, created_at)` + policy solo `service_role`.
+   - Server function `registerWithOtp` que:
+     - Lee IP desde `getRequestHeader('x-forwarded-for')`.
+     - Rechaza si ya existe un registro con esa IP en las últimas 24 h (o siempre, configurable — por defecto: siempre).
+     - Llama `supabaseAdmin.auth.signInWithOtp` con los metadatos.
+   - `/register` deja de llamar `supabase.auth.signUp` directamente y usa `useServerFn(registerWithOtp)`.
 
 ## Detalles técnicos
-- Migraciones separadas por iteración, con GRANT completos y RLS por `auth.uid()`.
-- Verificación de email usa el sistema nativo de Supabase (`supabase.auth.signUp` sin auto-confirm + `supabase.auth.verifyOtp` para códigos de retiro reutilizando `email` OTP). Sin infraestructura de correo custom.
-- Anti-multicuenta hace SHA-256 de IP + UA en un server fn `checkSignupEligibility` llamado antes de `signUp`.
-- Auto-logout: listener de `mousemove/keydown/touchstart` con `setTimeout` de 30 min, reset por evento.
 
-## Riesgos que asumo por el alcance
-- Los usuarios y balances existentes se preservan; los planes viejos se reemplazan (las inversiones activas antiguas siguen existiendo con su plan_id — se mostrarán con nombre/precio nuevo si coincide id, o "Plan legado" si no).
-- Anti-multicuenta por IP puede bloquear a familias con la misma red; queda un botón admin para whitelistear si hace falta más adelante.
-- Verificación email nativa de Supabase: los correos pueden tardar/caer en spam; no hay control custom de plantilla en esta fase.
+- Nueva migración SQL:
+  - `ALTER TABLE profiles ADD COLUMN bonus_locked boolean NOT NULL DEFAULT true;`
+  - `INSERT INTO plans` para Plan Debut si no existe.
+  - Reescribir `handle_new_user` (bono $5 + auto-investment + flag).
+  - Crear `signup_ips` con RLS (solo service_role).
+- Nuevos archivos:
+  - `src/lib/auth-otp.functions.ts` — `registerWithOtp`, `verifyOtp`, `resendOtp`.
+  - `src/routes/verify.tsx` — pantalla de 6 dígitos.
+  - `src/components/CountryCodeSelect.tsx` + `src/lib/countries.ts`.
+- Archivos editados:
+  - `src/routes/register.tsx` — usar server function + selector país + redirect a `/verify`.
 
-Al aprobar, arranco por la Iteración 1.
+## Lo que NO entra en esta fase
+
+- Recargas/retiros/horarios/comprobantes (Fase 3).
+- Trading, fondo global, cron de ganancias (Fase 4).
+- Soporte flotante, skeletons, countdown ganancias en dashboard (Fase 5).
+
+Después de esta fase avanzo a la Fase 3 en el siguiente turno.
