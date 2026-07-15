@@ -1,21 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { MaintenanceGate } from "@/components/MaintenanceGate";
+import { useServerFn } from "@tanstack/react-start";
+import { registerUser } from "@/lib/auth-otp.functions";
+import { CountryCodeSelect, DEFAULT_COUNTRY } from "@/components/CountryCodeSelect";
+import type { Country } from "@/lib/countries";
 
 export const Route = createFileRoute("/register")({
-  component: RegisterRoute,
+  component: RegisterPage,
   head: () => ({ meta: [{ title: "Registro — Solaris Future Tech" }] }),
 });
-
-function RegisterRoute() {
-  return (
-    <MaintenanceGate>
-      <RegisterPage />
-    </MaintenanceGate>
-  );
-}
 
 function scorePassword(p: string): { score: 0 | 1 | 2 | 3; label: string; color: string } {
   let s = 0;
@@ -30,7 +24,9 @@ function scorePassword(p: string): { score: 0 | 1 | 2 | 3; label: string; color:
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const submit = useServerFn(registerUser);
   const [username, setUsername] = useState("");
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -55,23 +51,29 @@ function RegisterPage() {
       toast.error("La contraseña debe tener 8+ caracteres, una mayúscula y un número");
       return;
     }
+    const fullPhone = `+${country.dial}${phone.replace(/\D/g, "")}`;
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { username, phone, invitation_code: invitationCode.trim().toUpperCase() || null },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      await submit({
+        data: {
+          email: email.trim().toLowerCase(),
+          password,
+          username: username.trim(),
+          phone: fullPhone,
+          invitation_code: invitationCode.trim().toUpperCase() || null,
+        },
+      });
+      sessionStorage.setItem("sft:pending_email", email.trim().toLowerCase());
+      toast.success("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
+      setTimeout(
+        () => navigate({ to: "/verify", search: { email: email.trim().toLowerCase() } as never }),
+        900,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo completar el registro");
+    } finally {
+      setLoading(false);
     }
-    await supabase.auth.signOut();
-    toast.success("Registro exitoso. ¡Recibiste $1.00 USD de bono!");
-    setTimeout(() => navigate({ to: "/login" }), 1400);
   }
 
   return (
@@ -83,29 +85,62 @@ function RegisterPage() {
           </div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Crear cuenta</h1>
           <p className="mt-1 text-xs uppercase tracking-[0.3em] text-cyan-glow">Solaris Future Tech</p>
-          <p className="mt-3 text-xs text-neon">🎁 Bono de registro: $1.00 USD al crear tu cuenta</p>
+          <p className="mt-3 text-xs text-neon">
+            🎁 Bono de bienvenida: <strong>$5.00 USD</strong> + Plan Debut activo
+          </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-3">
           <Field label="Nombre de usuario" value={username} onChange={setUsername} placeholder="Tu nombre" />
-          <Field label="Número de teléfono" value={phone} onChange={setPhone} placeholder="+58 …" type="tel" />
+
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Teléfono</span>
+            <div className="flex">
+              <CountryCodeSelect value={country} onChange={setCountry} />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ""))}
+                placeholder="Número"
+                className="w-full rounded-r-2xl glass-input px-4 py-3.5 text-base outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
           <Field label="Correo electrónico" type="email" value={email} onChange={setEmail} placeholder="tu@correo.com" />
 
           <div>
-            <Field label="Contraseña" type="password" value={password} onChange={setPassword} placeholder="Mín. 8 caracteres, una mayúscula y número" />
+            <Field
+              label="Contraseña"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              placeholder="Mín. 8 caracteres, una mayúscula y número"
+            />
             {password.length > 0 && (
               <div className="mt-2">
                 <div className="flex h-1.5 gap-1">
                   {[1, 2, 3].map((n) => (
-                    <div key={n} className={`h-full flex-1 rounded-full ${strength.score >= n ? strength.color : "bg-white/10"}`} />
+                    <div
+                      key={n}
+                      className={`h-full flex-1 rounded-full ${strength.score >= n ? strength.color : "bg-white/10"}`}
+                    />
                   ))}
                 </div>
-                <p className="mt-1 text-[10px] text-muted-foreground">Seguridad: <span className="font-semibold text-foreground">{strength.label}</span></p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Seguridad: <span className="font-semibold text-foreground">{strength.label}</span>
+                </p>
               </div>
             )}
           </div>
 
-          <Field label="Código de invitación" value={invitationCode} onChange={setInvitationCode} placeholder="(opcional)" />
+          <Field
+            label="Código de invitación"
+            value={invitationCode}
+            onChange={setInvitationCode}
+            placeholder="(opcional)"
+          />
 
           <button
             type="submit"
@@ -127,8 +162,18 @@ function RegisterPage() {
   );
 }
 
-function Field({ label, value, onChange, type = "text", placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
