@@ -163,6 +163,34 @@ function RegisterPage() {
             placeholder="(opcional)"
           />
 
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Código de seguridad <span className="text-red-400">*</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="select-none rounded-2xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xl font-bold italic tracking-[0.35em] text-cyan-glow line-through decoration-white/20">
+                {captcha}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setCaptcha(makeCaptcha()); setCaptchaInput(""); setCaptchaError(null); }}
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl glass-card text-lg"
+                aria-label="Refrescar captcha"
+              >
+                ↻
+              </button>
+            </div>
+            <input
+              value={captchaInput}
+              onChange={(e) => { setCaptchaInput(e.target.value); setCaptchaError(null); }}
+              placeholder="Escribe los 6 caracteres"
+              maxLength={6}
+              className={`mt-2 w-full rounded-2xl glass-input px-4 py-3.5 text-base tracking-widest outline-none ${captchaError ? "border-red-500" : "focus:border-primary"}`}
+            />
+            {captchaError && <p className="mt-1 text-xs font-semibold text-red-400">{captchaError}</p>}
+          </div>
+
+
           <button
             type="submit"
             disabled={loading}
