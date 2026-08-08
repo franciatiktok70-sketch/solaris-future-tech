@@ -13,6 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PanelRouteImport } from './routes/panel'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ControlRouteImport } from './routes/control'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -41,6 +42,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelRoute = PanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
+  '/panel': typeof PanelRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify': typeof VerifyRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
+  '/panel': typeof PanelRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify': typeof VerifyRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/control': typeof ControlRoute
   '/login': typeof LoginRoute
+  '/panel': typeof PanelRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify': typeof VerifyRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/control'
     | '/login'
+    | '/panel'
     | '/register'
     | '/reset-password'
     | '/verify'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/control'
     | '/login'
+    | '/panel'
     | '/register'
     | '/reset-password'
     | '/verify'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/control'
     | '/login'
+    | '/panel'
     | '/register'
     | '/reset-password'
     | '/verify'
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ControlRoute: typeof ControlRoute
   LoginRoute: typeof LoginRoute
+  PanelRoute: typeof PanelRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyRoute: typeof VerifyRoute
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel': {
+      id: '/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof PanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -310,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ControlRoute: ControlRoute,
   LoginRoute: LoginRoute,
+  PanelRoute: PanelRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyRoute: VerifyRoute,
