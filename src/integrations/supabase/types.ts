@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          updated_at: string
+          usd_to_bs: number
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          usd_to_bs?: number
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          usd_to_bs?: number
+        }
+        Relationships: []
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
@@ -172,7 +190,9 @@ export type Database = {
         Row: {
           cycle_days: number
           daily_profit_pct: number
+          description: string | null
           hidden: boolean
+          icon: string
           id: string
           image_url: string | null
           name: string
@@ -183,7 +203,9 @@ export type Database = {
         Insert: {
           cycle_days?: number
           daily_profit_pct?: number
+          description?: string | null
           hidden?: boolean
+          icon?: string
           id?: string
           image_url?: string | null
           name: string
@@ -194,7 +216,9 @@ export type Database = {
         Update: {
           cycle_days?: number
           daily_profit_pct?: number
+          description?: string | null
           hidden?: boolean
+          icon?: string
           id?: string
           image_url?: string | null
           name?: string
@@ -207,11 +231,13 @@ export type Database = {
       profiles: {
         Row: {
           balance: number
+          bonus_balance: number
           bonus_locked: boolean
           created_at: string
           email: string
           id: string
           invitation_code: string
+          own_invested: number
           referred_by: string | null
           total_recharged: number
           total_withdrawn: number
@@ -219,11 +245,13 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          bonus_balance?: number
           bonus_locked?: boolean
           created_at?: string
           email: string
           id: string
           invitation_code: string
+          own_invested?: number
           referred_by?: string | null
           total_recharged?: number
           total_withdrawn?: number
@@ -231,11 +259,13 @@ export type Database = {
         }
         Update: {
           balance?: number
+          bonus_balance?: number
           bonus_locked?: boolean
           created_at?: string
           email?: string
           id?: string
           invitation_code?: string
+          own_invested?: number
           referred_by?: string | null
           total_recharged?: number
           total_withdrawn?: number
@@ -449,6 +479,18 @@ export type Database = {
         Args: { _amount: number; _claim_limit: number; _code: string }
         Returns: string
       }
+      admin_create_plan: {
+        Args: {
+          _cycle_days: number
+          _daily_profit_pct: number
+          _description?: string
+          _icon?: string
+          _name: string
+          _price: number
+        }
+        Returns: string
+      }
+      admin_delete_plan: { Args: { _plan_id: string }; Returns: undefined }
       admin_force_expire_investment: {
         Args: { _inv_id: string }
         Returns: undefined
@@ -470,14 +512,38 @@ export type Database = {
           username: string
         }[]
       }
+      admin_list_plans: {
+        Args: never
+        Returns: {
+          cycle_days: number
+          daily_profit_pct: number
+          description: string | null
+          hidden: boolean
+          icon: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          sort_order: number
+          wattage: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "plans"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_list_users: {
         Args: never
         Returns: {
           balance: number
+          bonus_balance: number
           created_at: string
           email: string
           id: string
           invitation_code: string
+          own_invested: number
           referred_by: string
           total_recharged: number
           total_withdrawn: number
@@ -486,6 +552,11 @@ export type Database = {
       }
       admin_reject_recharge: { Args: { _req_id: string }; Returns: undefined }
       admin_reject_withdrawal: { Args: { _req_id: string }; Returns: undefined }
+      admin_set_plan_hidden: {
+        Args: { _hidden: boolean; _plan_id: string }
+        Returns: undefined
+      }
+      admin_set_rate: { Args: { _rate: number }; Returns: undefined }
       admin_toggle_gift_code: {
         Args: { _active: boolean; _code_id: string }
         Returns: undefined
@@ -512,10 +583,20 @@ export type Database = {
         }
       }
       claim_gift_code: { Args: { _code: string }; Returns: number }
-      create_withdrawal: {
-        Args: { _amount: number; _bank_account_id: string; _pin: string }
-        Returns: string
-      }
+      create_withdrawal:
+        | {
+            Args: { _amount: number; _bank_account_id: string; _pin: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              _amount: number
+              _bank_account_id: string
+              _currency?: string
+              _pin: string
+            }
+            Returns: string
+          }
       generate_withdrawal_pin: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -524,6 +605,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_business_hours: { Args: never; Returns: boolean }
       process_due_payouts: { Args: { _user_id: string }; Returns: undefined }
       purchase_plan: { Args: { _plan_id: string }; Returns: Json }
     }
