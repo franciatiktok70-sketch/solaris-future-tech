@@ -22,6 +22,13 @@ function scorePassword(p: string): { score: 0 | 1 | 2 | 3; label: string; color:
   return { score: 3, label: "Fuerte", color: "bg-[oklch(0.85_0.22_145)]" };
 }
 
+const CAPTCHA_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+function makeCaptcha() {
+  let s = "";
+  for (let i = 0; i < 6; i++) s += CAPTCHA_CHARS[Math.floor(Math.random() * CAPTCHA_CHARS.length)];
+  return s;
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const submit = useServerFn(registerUser);
@@ -31,9 +38,13 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
+  const [captcha, setCaptcha] = useState("XXXXXX");
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setCaptcha(makeCaptcha());
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) setInvitationCode(ref.toUpperCase());
@@ -51,25 +62,34 @@ function RegisterPage() {
       toast.error("La contraseña debe tener 8+ caracteres, una mayúscula y un número");
       return;
     }
+    if (captchaInput !== captcha) {
+      setCaptchaError("El código de seguridad no coincide. Inténtalo de nuevo.");
+      setCaptcha(makeCaptcha());
+      setCaptchaInput("");
+      toast.error("Captcha incorrecto");
+      return;
+    }
+    setCaptchaError(null);
     const fullPhone = `+${country.dial}${phone.replace(/\D/g, "")}`;
+    const mail = email.trim().toLowerCase();
     setLoading(true);
     try {
       await submit({
         data: {
-          email: email.trim().toLowerCase(),
+          email: mail,
           password,
           username: username.trim(),
           phone: fullPhone,
           invitation_code: invitationCode.trim().toUpperCase() || null,
         },
       });
-      sessionStorage.setItem("sft:pending_email", email.trim().toLowerCase());
-      toast.success("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
-      setTimeout(
-        () => navigate({ to: "/verify", search: { email: email.trim().toLowerCase() } as never }),
-        900,
-      );
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: mail, password });
+      if (signInErr) throw new Error(signInErr.message);
+      toast.success("¡Cuenta creada! Bono de bienvenida de $5.00 USD acreditado.");
+      navigate({ to: "/home" });
     } catch (err) {
+      setCaptcha(makeCaptcha());
+      setCaptchaInput("");
       toast.error(err instanceof Error ? err.message : "No se pudo completar el registro");
     } finally {
       setLoading(false);
