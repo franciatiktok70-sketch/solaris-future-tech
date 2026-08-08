@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { registerUser } from "@/lib/auth-otp.functions";
 import { CountryCodeSelect, DEFAULT_COUNTRY } from "@/components/CountryCodeSelect";
 import type { Country } from "@/lib/countries";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
