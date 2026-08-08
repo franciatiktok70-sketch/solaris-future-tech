@@ -49,7 +49,9 @@ function AppLayout() {
       <div className="mx-auto max-w-md">
         <Outlet />
       </div>
+      <SupportFab />
       <BottomNav />
     </div>
+
   );
 }
