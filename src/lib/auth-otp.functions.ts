@@ -37,16 +37,28 @@ export const registerUser = createServerFn({ method: "POST" })
     if (ip) {
       const { data: prev, error: ipErr } = await supabaseAdmin
         .from("signup_ips")
-        .select("id")
+        .select("user_id")
         .eq("ip", ip)
-        .limit(1);
+        .not("user_id", "is", null)
+        .limit(20);
       if (ipErr) throw new Error(ipErr.message);
-      if (prev && prev.length > 0) {
-        throw new Error(
-          "Ya existe una cuenta registrada desde este dispositivo o red. Solo se permite una cuenta por IP.",
-        );
+      const ids = (prev ?? []).map((r) => r.user_id!).filter(Boolean);
+      if (ids.length > 0) {
+        // Solo bloquear si esas cuentas siguen existiendo
+        const { data: stillThere } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .in("id", ids)
+          .limit(1);
+        if (stillThere && stillThere.length > 0) {
+          throw new Error(
+            "Ya existe una cuenta registrada desde este dispositivo o red. Solo se permite una cuenta por IP.",
+          );
+        }
+        await supabaseAdmin.from("signup_ips").delete().eq("ip", ip);
       }
     }
+
 
     // Crear usuario SIN confirmar (dispara email de confirmación con OTP)
     // Usamos el flujo público de signUp vía el SDK server-side con la clave publishable.
