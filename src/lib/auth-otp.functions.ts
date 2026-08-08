@@ -44,7 +44,6 @@ export const registerUser = createServerFn({ method: "POST" })
       if (ipErr) throw new Error(ipErr.message);
       const ids = (prev ?? []).map((r) => r.user_id!).filter(Boolean);
       if (ids.length > 0) {
-        // Solo bloquear si esas cuentas siguen existiendo
         const { data: stillThere } = await supabaseAdmin
           .from("profiles")
           .select("id")
@@ -59,78 +58,24 @@ export const registerUser = createServerFn({ method: "POST" })
       }
     }
 
-
-    // Crear usuario SIN confirmar (dispara email de confirmación con OTP)
-    // Usamos el flujo público de signUp vía el SDK server-side con la clave publishable.
-    const SUPABASE_URL = process.env.SUPABASE_URL!;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const { createClient } = await import("@supabase/supabase-js");
-    const publicClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-    });
-
-    const { data: signup, error: signErr } = await publicClient.auth.signUp({
+    // Crear usuario ya confirmado (sin verificación por correo)
+    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
-      options: {
-        data: {
-          username: data.username,
-          phone: data.phone,
-          invitation_code: (data.invitation_code ?? "").toUpperCase() || null,
-        },
+      email_confirm: true,
+      user_metadata: {
+        username: data.username,
+        phone: data.phone,
+        invitation_code: (data.invitation_code ?? "").toUpperCase() || null,
       },
     });
-    if (signErr) throw new Error(signErr.message);
+    if (createErr) throw new Error(createErr.message);
 
-    const newUserId = signup.user?.id ?? null;
+    const newUserId = created.user?.id ?? null;
 
-    // Registrar IP (solo si tenemos user y ip)
     if (ip && newUserId) {
-      await supabaseAdmin
-        .from("signup_ips")
-        .insert({ user_id: newUserId, ip, user_agent: ua });
+      await supabaseAdmin.from("signup_ips").insert({ user_id: newUserId, ip, user_agent: ua });
     }
 
     return { ok: true, email: data.email };
-  });
-
-export const verifyEmailOtp = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z
-      .object({
-        email: z.string().trim().toLowerCase().email(),
-        token: z.string().trim().regex(/^\d{6}$/u, "Código inválido"),
-      })
-      .parse(input),
-  )
-  .handler(async ({ data }) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL!;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const { createClient } = await import("@supabase/supabase-js");
-    const publicClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-    });
-    const { error } = await publicClient.auth.verifyOtp({
-      email: data.email,
-      token: data.token,
-      type: "signup",
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-export const resendSignupOtp = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ email: z.string().trim().toLowerCase().email() }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL!;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const { createClient } = await import("@supabase/supabase-js");
-    const publicClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-    });
-    const { error } = await publicClient.auth.resend({ type: "signup", email: data.email });
-    if (error) throw new Error(error.message);
-    return { ok: true };
   });

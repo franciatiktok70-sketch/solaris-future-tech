@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { registerUser } from "@/lib/auth-otp.functions";
 import { CountryCodeSelect, DEFAULT_COUNTRY } from "@/components/CountryCodeSelect";
 import type { Country } from "@/lib/countries";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
@@ -22,6 +23,13 @@ function scorePassword(p: string): { score: 0 | 1 | 2 | 3; label: string; color:
   return { score: 3, label: "Fuerte", color: "bg-[oklch(0.85_0.22_145)]" };
 }
 
+const CAPTCHA_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+function makeCaptcha() {
+  let s = "";
+  for (let i = 0; i < 6; i++) s += CAPTCHA_CHARS[Math.floor(Math.random() * CAPTCHA_CHARS.length)];
+  return s;
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const submit = useServerFn(registerUser);
@@ -31,9 +39,13 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
+  const [captcha, setCaptcha] = useState("XXXXXX");
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setCaptcha(makeCaptcha());
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) setInvitationCode(ref.toUpperCase());
@@ -51,25 +63,34 @@ function RegisterPage() {
       toast.error("La contraseña debe tener 8+ caracteres, una mayúscula y un número");
       return;
     }
+    if (captchaInput !== captcha) {
+      setCaptchaError("El código de seguridad no coincide. Inténtalo de nuevo.");
+      setCaptcha(makeCaptcha());
+      setCaptchaInput("");
+      toast.error("Captcha incorrecto");
+      return;
+    }
+    setCaptchaError(null);
     const fullPhone = `+${country.dial}${phone.replace(/\D/g, "")}`;
+    const mail = email.trim().toLowerCase();
     setLoading(true);
     try {
       await submit({
         data: {
-          email: email.trim().toLowerCase(),
+          email: mail,
           password,
           username: username.trim(),
           phone: fullPhone,
           invitation_code: invitationCode.trim().toUpperCase() || null,
         },
       });
-      sessionStorage.setItem("sft:pending_email", email.trim().toLowerCase());
-      toast.success("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
-      setTimeout(
-        () => navigate({ to: "/verify", search: { email: email.trim().toLowerCase() } as never }),
-        900,
-      );
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: mail, password });
+      if (signInErr) throw new Error(signInErr.message);
+      toast.success("¡Cuenta creada! Bono de bienvenida de $5.00 USD acreditado.");
+      navigate({ to: "/home" });
     } catch (err) {
+      setCaptcha(makeCaptcha());
+      setCaptchaInput("");
       toast.error(err instanceof Error ? err.message : "No se pudo completar el registro");
     } finally {
       setLoading(false);
@@ -141,6 +162,34 @@ function RegisterPage() {
             onChange={setInvitationCode}
             placeholder="(opcional)"
           />
+
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Código de seguridad <span className="text-red-400">*</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="select-none rounded-2xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xl font-bold italic tracking-[0.35em] text-cyan-glow line-through decoration-white/20">
+                {captcha}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setCaptcha(makeCaptcha()); setCaptchaInput(""); setCaptchaError(null); }}
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl glass-card text-lg"
+                aria-label="Refrescar captcha"
+              >
+                ↻
+              </button>
+            </div>
+            <input
+              value={captchaInput}
+              onChange={(e) => { setCaptchaInput(e.target.value); setCaptchaError(null); }}
+              placeholder="Escribe los 6 caracteres"
+              maxLength={6}
+              className={`mt-2 w-full rounded-2xl glass-input px-4 py-3.5 text-base tracking-widest outline-none ${captchaError ? "border-red-500" : "focus:border-primary"}`}
+            />
+            {captchaError && <p className="mt-1 text-xs font-semibold text-red-400">{captchaError}</p>}
+          </div>
+
 
           <button
             type="submit"
