@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
+import { SupportFab } from "@/components/SupportFab";
 import { useAutoLogout } from "@/hooks/use-auto-logout";
 import { toast } from "sonner";
 
